@@ -14,3 +14,7 @@ public:
 private:
     std::vector<T> dense_array_;
 };
+
+// Explicit template instantiation for common types
+template class DenseData<int>;
+template class DenseData<long long>;

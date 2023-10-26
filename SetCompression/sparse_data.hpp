@@ -15,3 +15,7 @@ public:
 private:
     std::vector<std::pair<T, T>> sparse_data_;  // Pair structure: (index, value)
 };
+
+// Explicit template instantiation for common types
+template class SparseData<int>;
+template class SparseData<long long>;
