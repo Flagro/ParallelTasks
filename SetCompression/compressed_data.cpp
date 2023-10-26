@@ -5,8 +5,7 @@
 #include <omp.h>
 
 template <typename T>
-CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value)
-    : max_value_(max_value) {
+CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
 
     // Create the dense array representation using std::vector
     std::vector<T> dense_array(max_value + 1, 0);  // Initialize with zeros
