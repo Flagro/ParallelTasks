@@ -14,3 +14,7 @@ public:
     std::vector<T> get_data() const;
     size_t get_size() const;
 };
+
+// Explicit template instantiation for common types
+template class CompressedData<int>;
+template class CompressedData<long long>;
