@@ -15,7 +15,7 @@ if(OpenMP_CXX_FOUND)
 
     # Check if the compiler is GCC or Clang to set the OpenMP version flag
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=45")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fopenmp")
     endif()
 endif()
 
