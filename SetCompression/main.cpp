@@ -77,18 +77,18 @@ int main() {
             get_data_times.push_back(time_function([&]() { auto data = compressed.get_data(); }));
             get_size_times.push_back(time_function([&]() { auto size = compressed.get_size(); }));
             sizes.push_back(compressed.get_size());
+
+            // JSON output
+            std::vector<std::pair<std::string, std::string>> run_results;
+            run_results.emplace_back("threads", std::to_string(num_threads));
+            run_results.emplace_back("compression_time", std::to_string(compression_times.back()));
+            run_results.emplace_back("get_data_time", std::to_string(get_data_times.back()));
+            run_results.emplace_back("get_size_time", std::to_string(get_size_times.back()));
+            run_results.emplace_back("compressed_size", std::to_string(sizes.back()));
+            run_results.emplace_back("original_size", std::to_string(numbers.capacity() * sizeof(int)));
+
+            json_results += toJsonString(run_results) + ",\n";
         }
-
-        std::vector<std::pair<std::string, std::string>> run_results;
-        run_results.emplace_back("threads", std::to_string(num_threads));
-        run_results.emplace_back("median_compression_time", std::to_string(get_median(compression_times)));
-        run_results.emplace_back("median_get_data_time", std::to_string(get_median(get_data_times)));
-        run_results.emplace_back("median_get_size_time", std::to_string(get_median(get_size_times)));
-        run_results.emplace_back("min_size", std::to_string(*std::min_element(sizes.begin(), sizes.end())));
-        run_results.emplace_back("max_size", std::to_string(*std::max_element(sizes.begin(), sizes.end())));
-        run_results.emplace_back("mean_size", std::to_string(std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size()));
-
-        json_results += toJsonString(run_results) + ",\n";
 
         // Print the results to stdout
         std::cout << "Threads: " << num_threads << std::endl;
