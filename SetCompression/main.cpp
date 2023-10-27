@@ -90,7 +90,7 @@ int main() {
             compression_times.push_back(time_function([&]() { compressed = CompressedData<int>(numbers, MAX_VALUE); }));
 
             std::vector<int> reconstructed_data;
-            get_data_times.push_back(time_function([&]() { auto reconstructed_data = compressed.get_data(); }));
+            get_data_times.push_back(time_function([&]() { reconstructed_data = compressed.get_data(); }));
             get_size_times.push_back(time_function([&]() { auto size = compressed.get_size(); }));
             sizes.push_back(compressed.get_size());
 
