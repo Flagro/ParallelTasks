@@ -81,6 +81,9 @@ int main() {
             // JSON output
             std::vector<std::pair<std::string, std::string>> run_results;
             run_results.emplace_back("threads", std::to_string(num_threads));
+            run_results.emplace_back("data_size", std::to_string(N));
+            run_results.emplace_back("data_max_value", std::to_string(MAX_VALUE));
+            run_results.emplace_back("data_nunique", std::to_string(std::set<int>(numbers.begin(), numbers.end()).size()));
             run_results.emplace_back("compression_time", std::to_string(compression_times.back()));
             run_results.emplace_back("get_data_time", std::to_string(get_data_times.back()));
             run_results.emplace_back("get_size_time", std::to_string(get_size_times.back()));
