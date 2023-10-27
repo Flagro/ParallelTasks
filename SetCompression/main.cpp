@@ -96,7 +96,7 @@ int main() {
 
             bool is_correct = check_correctness(numbers, reconstructed_data);
 
-            if not(is_correct) {
+            if (!is_correct) {
                 thread_correctness = false;
                 std::cout << "Incorrect result!" << std::endl;
             }
