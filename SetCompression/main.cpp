@@ -76,7 +76,7 @@ int main() {
     for (int num_threads = 1; num_threads <= omp_max_threads; ++num_threads) {
         omp_set_num_threads(num_threads);
         
-        std::cout << "Processing with " << omp_get_num_threads() << " threads..." << std::endl;
+        std::cout << "Processing with " << num_threads << " threads..." << std::endl;
 
         std::vector<double> compression_times, get_data_times, get_size_times;
         std::vector<size_t> sizes;
@@ -103,7 +103,7 @@ int main() {
 
             // JSON output
             std::vector<std::pair<std::string, std::string>> run_results;
-            run_results.emplace_back("threads", std::to_string(omp_get_num_threads()));
+            run_results.emplace_back("threads", std::to_string(num_threads));
             run_results.emplace_back("data_size", std::to_string(N));
             run_results.emplace_back("data_max_value", std::to_string(MAX_VALUE));
             run_results.emplace_back("data_nunique", std::to_string(std::set<int>(numbers.begin(), numbers.end()).size()));
@@ -118,7 +118,7 @@ int main() {
         }
 
         // Print the results to stdout
-        std::cout << "Threads: " << omp_get_num_threads() << std::endl;
+        std::cout << "Threads: " << num_threads << std::endl;
         std::cout << "Median Compression Time: " << get_median(compression_times) << " ms" << std::endl;
         std::cout << "Median GetData Time: " << get_median(get_data_times) << " ms" << std::endl;
         std::cout << "Median GetSize Time: " << get_median(get_size_times) << " ms" << std::endl;
