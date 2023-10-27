@@ -7,7 +7,7 @@ DenseData<T>::DenseData(std::vector<T>&& dense_array, size_t original_size)
 
 template <typename T>
 std::vector<T> DenseData<T>::get_data() const {
-    std::vector<T> original_data(dense_array_.size());
+    std::vector<T> original_data(original_size_);
     #pragma omp parallel for
     for (T i = 0; i < dense_array_.size(); ++i) {
         size_t pos = 0;  // Starting position for this value

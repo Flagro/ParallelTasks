@@ -7,14 +7,22 @@ SparseData<T>::SparseData(std::vector<std::pair<T, T>>&& sparse_data, size_t ori
 
 template <typename T>
 std::vector<T> SparseData<T>::get_data() const {
-    std::vector<T> reconstructed_data;
-    for (const auto& entry : sparse_data_) {
+    std::vector<T> reconstructed_data(original_size_);
+
+    #pragma omp parallel for
+    for (size_t idx = 0; idx < sparse_data_.size(); ++idx) {
+        const auto& entry = sparse_data_[idx];
+        size_t pos = 0;  // Starting position for this value
+        for (size_t j = 0; j < idx; ++j) {
+            pos += sparse_data_[j].second;
+        }
         for (T i = 0; i < entry.second; ++i) {
-            reconstructed_data.push_back(entry.first);
+            reconstructed_data[pos + i] = entry.first;
         }
     }
     return reconstructed_data;
 }
+
 
 template <typename T>
 size_t SparseData<T>::get_size() const {
