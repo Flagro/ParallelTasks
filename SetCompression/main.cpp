@@ -80,7 +80,7 @@ int main() {
 
         std::vector<double> compression_times, get_data_times, get_size_times;
         std::vector<size_t> sizes;
-        bool thread_correctness = True;
+        bool thread_correctness = true;
 
         for (int trial = 0; trial < T; ++trial) {
             std::vector<int> numbers = generate_random_numbers(N, MAX_VALUE);
@@ -97,7 +97,7 @@ int main() {
             bool is_correct = check_correctness(numbers, reconstructed_data);
 
             if not(is_correct) {
-                thread_correctness = False;
+                thread_correctness = false;
                 std::cout << "Incorrect result!" << std::endl;
             }
 
