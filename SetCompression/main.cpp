@@ -3,6 +3,8 @@
 #include <random>
 #include <chrono>
 #include <algorithm>
+#include <fstream>
+#include "omp.h"
 #include "compressed_data.hpp"
 
 enum Constants {
@@ -42,33 +44,69 @@ double get_median(std::vector<double>& times) {
     }
 }
 
+std::string toJsonString(const std::vector<std::pair<std::string, std::string>>& items) {
+    std::string result = "{\n";
+    for (const auto& item : items) {
+        result += "    \"" + item.first + "\": " + item.second + ",\n";
+    }
+    result.pop_back(); // Remove the last comma
+    result.pop_back(); 
+    result += "\n}";
+    return result;
+}
+
 int main() {
-    std::vector<double> compression_times, get_data_times, get_size_times;
-    std::vector<size_t> sizes;
+    std::ofstream json_file("results.json");
+    std::string json_results = "[\n";
 
-    for (int trial = 0; trial < T; ++trial) {
-        std::vector<int> numbers = generate_random_numbers(N, MAX_VALUE);
-
-        // Measure compression time
-        CompressedData<int> compressed;
+    for (int num_threads = 1; num_threads <= omp_get_max_threads(); ++num_threads) {
+        omp_set_num_threads(num_threads);
         
-        compression_times.push_back(time_function([&]() { compressed = CompressedData<int>(numbers, MAX_VALUE); }));
+        std::cout << "Processing with " << num_threads << " threads..." << std::endl;
 
-        // Measure get_data time
-        get_data_times.push_back(time_function([&]() { auto data = compressed.get_data(); }));
+        std::vector<double> compression_times, get_data_times, get_size_times;
+        std::vector<size_t> sizes;
 
-        // Measure get_size time
-        get_size_times.push_back(time_function([&]() { auto size = compressed.get_size(); }));
+        for (int trial = 0; trial < T; ++trial) {
+            std::vector<int> numbers = generate_random_numbers(N, MAX_VALUE);
 
-        sizes.push_back(compressed.get_size());
+            CompressedData<int> compressed;
+
+            compression_times.push_back(time_function([&]() { compressed = CompressedData<int>(numbers, MAX_VALUE); }));
+
+            get_data_times.push_back(time_function([&]() { auto data = compressed.get_data(); }));
+            get_size_times.push_back(time_function([&]() { auto size = compressed.get_size(); }));
+            sizes.push_back(compressed.get_size());
+        }
+
+        std::vector<std::pair<std::string, std::string>> run_results;
+        run_results.emplace_back("threads", std::to_string(num_threads));
+        run_results.emplace_back("median_compression_time", std::to_string(get_median(compression_times)));
+        run_results.emplace_back("median_get_data_time", std::to_string(get_median(get_data_times)));
+        run_results.emplace_back("median_get_size_time", std::to_string(get_median(get_size_times)));
+        run_results.emplace_back("min_size", std::to_string(*std::min_element(sizes.begin(), sizes.end())));
+        run_results.emplace_back("max_size", std::to_string(*std::max_element(sizes.begin(), sizes.end())));
+        run_results.emplace_back("mean_size", std::to_string(std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size()));
+
+        json_results += toJsonString(run_results) + ",\n";
+
+        // Print the results to stdout
+        std::cout << "Threads: " << num_threads << std::endl;
+        std::cout << "Median Compression Time: " << get_median(compression_times) << " ms" << std::endl;
+        std::cout << "Median GetData Time: " << get_median(get_data_times) << " ms" << std::endl;
+        std::cout << "Median GetSize Time: " << get_median(get_size_times) << " ms" << std::endl;
+        std::cout << "Min Size: " << *std::min_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
+        std::cout << "Max Size: " << *std::max_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
+        std::cout << "Mean Size: " << std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size() << " bytes" << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
     }
 
-    std::cout << "Median Compression Time: " << get_median(compression_times) << " ms" << std::endl;
-    std::cout << "Median GetData Time: " << get_median(get_data_times) << " ms" << std::endl;
-    std::cout << "Median GetSize Time: " << get_median(get_size_times) << " ms" << std::endl;
-    std::cout << "Min Size: " << *std::min_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
-    std::cout << "Max Size: " << *std::max_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
-    std::cout << "Mean Size: " << std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size() << " bytes" << std::endl;
+    json_results.pop_back(); // Remove the last comma
+    json_results.pop_back(); 
+    json_results += "\n]";
+
+    json_file << json_results;
+    json_file.close();
 
     return 0;
 }
