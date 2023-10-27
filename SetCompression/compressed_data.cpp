@@ -6,15 +6,25 @@
 
 template <typename T>
 CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
-
-    // Create the dense array representation using std::vector
     std::vector<T> dense_array(max_value + 1, 0);  // Initialize with zeros
 
-    // Parallelizing the population of the dense array
-    #pragma omp parallel for
-    for (size_t i = 0; i < input.size(); i++) {
-        #pragma omp atomic
-        dense_array[input[i]]++;
+    #pragma omp parallel
+    {
+        // Each thread will have its own local dense array
+        std::vector<T> local_dense_array(max_value + 1, 0);
+
+        #pragma omp for
+        for (size_t i = 0; i < input.size(); i++) {
+            local_dense_array[input[i]]++;
+        }
+
+        // Now, we'll reduce/merge the local dense arrays into the global one
+        #pragma omp critical
+        {
+            for (T i = 0; i <= max_value; i++) {
+                dense_array[i] += local_dense_array[i];
+            }
+        }
     }
 
     // Count non-zero elements in the dense array
