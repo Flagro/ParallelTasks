@@ -1,4 +1,4 @@
-# ParallelTask
+# ParallelTasks
 This repository contains the implementation of tasks i got as homework for a job appliance for C++ developer with parallel CPU/GPU development tools stack.
 
 ## The tasks i was given
