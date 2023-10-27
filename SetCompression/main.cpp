@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <set>
+#include <multiset>
 #include "omp.h"
 #include "compressed_data.hpp"
 
@@ -56,6 +57,15 @@ std::string toJsonString(const std::vector<std::pair<std::string, std::string>>&
     return result;
 }
 
+bool check_correctness(const std::vector<int>& original_data, const std::vector<int>& reconstructed_data) {
+    if (original_data.size() != reconstructed_data.size()) {
+        return false;
+    }
+    std::multiset<int> original_data_set(original_data.begin(), original_data.end());
+    std::multiset<int> reconstructed_data_set(reconstructed_data.begin(), reconstructed_data.end());
+    return original_data_set == reconstructed_data_set;
+}
+
 int main() {
     std::ofstream json_file("results.json");
     std::string json_results = "[\n";
@@ -71,6 +81,7 @@ int main() {
 
         std::vector<double> compression_times, get_data_times, get_size_times;
         std::vector<size_t> sizes;
+        bool thread_correctness = True;
 
         for (int trial = 0; trial < T; ++trial) {
             std::vector<int> numbers = generate_random_numbers(N, MAX_VALUE);
@@ -79,9 +90,17 @@ int main() {
 
             compression_times.push_back(time_function([&]() { compressed = CompressedData<int>(numbers, MAX_VALUE); }));
 
-            get_data_times.push_back(time_function([&]() { auto data = compressed.get_data(); }));
+            std::vector<int> reconstructed_data;
+            get_data_times.push_back(time_function([&]() { auto reconstructed_data = compressed.get_data(); }));
             get_size_times.push_back(time_function([&]() { auto size = compressed.get_size(); }));
             sizes.push_back(compressed.get_size());
+
+            bool is_correct = check_correctness(numbers, reconstructed_data);
+
+            if not(is_correct) {
+                thread_correctness = False;
+                std::cout << "Incorrect result!" << std::endl;
+            }
 
             // JSON output
             std::vector<std::pair<std::string, std::string>> run_results;
@@ -94,6 +113,7 @@ int main() {
             run_results.emplace_back("get_size_time", std::to_string(get_size_times.back()));
             run_results.emplace_back("compressed_size", std::to_string(sizes.back()));
             run_results.emplace_back("original_size", std::to_string(numbers.capacity() * sizeof(int)));
+            run_results.emplace_back("correct", std::to_string(is_correct));
 
             json_results += toJsonString(run_results) + ",\n";
         }
@@ -106,6 +126,7 @@ int main() {
         std::cout << "Min Size: " << *std::min_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
         std::cout << "Max Size: " << *std::max_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
         std::cout << "Mean Size: " << std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size() << " bytes" << std::endl;
+        std::cout << "Correctness: " << thread_correctness << std::endl;
         std::cout << "----------------------------------------" << std::endl;
     }
 
