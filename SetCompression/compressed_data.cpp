@@ -28,7 +28,7 @@ CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
 
     // If the number of non-zero values is less than or equal to half of max_value, use the sparse representation.
     if (non_zero_count * 2 > static_cast<size_t>(max_value)) {
-        data_format_ = std::make_unique<DenseData<T>>(std::move(dense_array));
+        data_format_ = std::make_unique<DenseData<T>>(std::move(dense_array), input.size());
         return;
     }
 
@@ -39,7 +39,7 @@ CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
             sparse_array.emplace_back(i, dense_array[i]);
         }
     }
-    data_format_ = std::make_unique<SparseData<T>>(std::move(sparse_array));
+    data_format_ = std::make_unique<SparseData<T>>(std::move(sparse_array), input.size());
 }
 
 template <typename T>

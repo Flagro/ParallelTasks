@@ -1,8 +1,9 @@
+#include "omp.h"
 #include "sparse_data.hpp"
 
 template <typename T>
-SparseData<T>::SparseData(std::vector<std::pair<T, T>>&& sparse_data)
-    : sparse_data_(std::move(sparse_data)) {}
+SparseData<T>::SparseData(std::vector<std::pair<T, T>>&& sparse_data, size_t original_size)
+    : sparse_data_(std::move(sparse_data)), original_size_(original_size) {}
 
 template <typename T>
 std::vector<T> SparseData<T>::get_data() const {
