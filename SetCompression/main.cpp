@@ -4,6 +4,7 @@
 #include <chrono>
 #include <algorithm>
 #include <fstream>
+#include <set>
 #include "omp.h"
 #include "compressed_data.hpp"
 
