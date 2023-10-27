@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <fstream>
 #include <set>
-#include <multiset>
 #include "omp.h"
 #include "compressed_data.hpp"
 
