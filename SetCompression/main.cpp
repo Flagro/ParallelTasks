@@ -7,7 +7,7 @@
 
 enum Constants {
     N = 1000000,       // Number of random integers
-    T = 1000,          // Number of trials
+    T = 100,          // Number of trials
     MAX_VALUE = 100    // Max value for random numbers
 };
 
@@ -50,9 +50,9 @@ int main() {
         std::vector<int> numbers = generate_random_numbers(N, MAX_VALUE);
 
         // Measure compression time
-        compression_times.push_back(time_function([&]() { CompressedData<int> compressed(numbers, MAX_VALUE); }));
-
-        CompressedData<int> compressed(numbers, MAX_VALUE);
+        CompressedData<int> compressed;
+        
+        compression_times.push_back(time_function([&]() { compressed = CompressedData<int>(numbers, MAX_VALUE); }));
 
         // Measure get_data time
         get_data_times.push_back(time_function([&]() { auto data = compressed.get_data(); }));
