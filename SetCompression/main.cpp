@@ -59,8 +59,11 @@ std::string toJsonString(const std::vector<std::pair<std::string, std::string>>&
 int main() {
     std::ofstream json_file("results.json");
     std::string json_results = "[\n";
+    
+    omp_set_dynamic(0);
+    const auto omp_max_threads = omp_get_max_threads();
 
-    for (int num_threads = 1; num_threads <= omp_get_max_threads(); ++num_threads) {
+    for (int num_threads = 1; num_threads <= omp_max_threads; ++num_threads) {
         omp_set_num_threads(num_threads);
         
         std::cout << "Processing with " << num_threads << " threads..." << std::endl;
