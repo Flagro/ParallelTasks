@@ -23,5 +23,5 @@ std::vector<T> DenseData<T>::get_data() const {
 
 template <typename T>
 size_t DenseData<T>::get_size() const {
-    return sizeof(T) * dense_array_.capacity();
+    return sizeof(T) * dense_array_.capacity() + sizeof(size_t);
 }

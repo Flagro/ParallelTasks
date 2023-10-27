@@ -26,5 +26,5 @@ std::vector<T> SparseData<T>::get_data() const {
 
 template <typename T>
 size_t SparseData<T>::get_size() const {
-    return sparse_data_.capacity() * (2 * sizeof(T));  // Capacity of pairs (index, value)
+    return sparse_data_.capacity() * (2 * sizeof(T)) + sizeof(size_t);  // Capacity of pairs (index, value)
 }
