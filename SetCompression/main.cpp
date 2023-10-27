@@ -62,7 +62,7 @@ int main() {
     
     omp_set_dynamic(0);
     omp_set_num_threads(4);
-    const auto omp_max_threads = omp_get_num_threads();
+    const auto omp_max_threads = omp_get_max_threads();
 
     for (int num_threads = 1; num_threads <= omp_max_threads; ++num_threads) {
         omp_set_num_threads(num_threads);
