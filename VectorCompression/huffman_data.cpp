@@ -1,12 +1,12 @@
 #include "omp.h"
-#include "dense_data.hpp"
+#include "huffman_data.hpp"
 
 template <typename T>
-DenseData<T>::DenseData(std::vector<T>&& dense_array, size_t original_size)
+HuffmanData<T>::HuffmanData(std::vector<T>&& dense_array, size_t original_size)
     : dense_array_(std::move(dense_array)), original_size_(original_size) {}
 
 template <typename T>
-std::vector<T> DenseData<T>::get_data() const {
+std::vector<T> HuffmanData<T>::get_data() const {
     std::vector<T> original_data(original_size_);
     #pragma omp parallel for
     for (T i = 0; i < dense_array_.size(); ++i) {
@@ -22,6 +22,6 @@ std::vector<T> DenseData<T>::get_data() const {
 }
 
 template <typename T>
-size_t DenseData<T>::get_size() const {
+size_t HuffmanData<T>::get_size() const {
     return sizeof(T) * dense_array_.capacity() + sizeof(size_t);
 }

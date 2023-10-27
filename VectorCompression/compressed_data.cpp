@@ -1,6 +1,6 @@
 #include "compressed_data.hpp"
-#include "sparse_data.hpp"
-#include "dense_data.hpp"
+#include "huffman_data.hpp"
+#include "bitset_data.hpp"
 #include <vector>
 #include <omp.h>
 
