@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include <algorithm>
+#include <functional>
 #include <fstream>
 #include <set>
 #include "unique_finder.cuh"
