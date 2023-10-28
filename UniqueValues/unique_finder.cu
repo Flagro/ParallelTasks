@@ -135,6 +135,13 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_binary;
     cudaMalloc(&d_binary, nunique * sizeof(int));
     histogram_to_binary<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, nunique);
+    // After converting to binary
+    int* h_binary_debug = new int[nunique];
+    cudaMemcpy(h_binary_debug, d_binary, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < nunique; i++) {
+        std::cout << "Binary[" << i << "]: " << h_binary_debug[i] << std::endl;
+    }
+    delete[] h_binary_debug;
 
     // Allocate memory for prefix_sum and unique_values on the device
     int* d_prefix_sum, *d_unique_values;
