@@ -99,6 +99,14 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_binary;
     cudaMalloc(&d_binary, nunique * sizeof(int));
     histogram_to_binary<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, nunique);
+    // After generating the histogram
+    int* h_histogram_debug = new int[nunique];
+    cudaMemcpy(h_histogram_debug, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < nunique; i++) {
+        std::cout << "Hist[" << i << "]: " << h_histogram_debug[i] << std::endl;
+    }
+    delete[] h_histogram_debug;
+
 
     // After converting to binary
     int* h_binary_debug = new int[nunique];
