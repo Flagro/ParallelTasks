@@ -100,13 +100,16 @@ std::vector<int> UniqueFinder::find_unique() {
     if (err != cudaSuccess) {
         std::cerr << "Failed to allocate device memory: " << cudaGetErrorString(err) << std::endl;
     }
+
     cudaMalloc(&d_histogram, nunique * sizeof(int));
     cudaDeviceSynchronize();
+
     err = cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
     if (err != cudaSuccess) {
         std::cerr << "Failed to copy to a device memory: " << cudaGetErrorString(err) << std::endl;
     }
+
     err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
     cudaDeviceSynchronize();
     if (err != cudaSuccess) {
@@ -117,7 +120,6 @@ std::vector<int> UniqueFinder::find_unique() {
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
     // count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
     count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
-
     cudaDeviceSynchronize();
     err = cudaGetLastError();
     if (err != cudaSuccess) {
