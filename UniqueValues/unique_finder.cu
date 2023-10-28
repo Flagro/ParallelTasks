@@ -44,7 +44,7 @@ template <typename T>
 std::vector<T> UniqueFinder<T>::find_unique() {
     cudaDeviceSynchronize();
 
-    #count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size, nunique);
+    //count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size, nunique);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
