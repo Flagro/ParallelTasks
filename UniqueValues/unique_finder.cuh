@@ -14,6 +14,7 @@ private:
     T* d_data_;
     T* d_unique_values_;
     T* d_histogram_;
+    T* d_output_count_;
     std::vector<T> histogram_;
     size_t unique_values_;
 };
