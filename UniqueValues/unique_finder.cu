@@ -7,22 +7,14 @@ enum { BLOCK_SIZE = 32 };
 template <typename T>
 __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int chunk_size = n / gridDim.x; // Determine the size of each chunk
-    
-    // Start and end indices for this thread's chunk
-    int start = idx * chunk_size;
-    int end = start + chunk_size;
-    if (idx == gridDim.x - 1) { // Last block may have more elements
-        end = n;
-    }
 
-    for (int i = start; i < end; i++) {
-        T value = data[i];
-        for (int u = 0; u < unique_values_; u++) {
-            if (value == unique_vals[u]) {
-                atomicAdd(&histogram[u], 1);
-                break; // Break once we've found a match
-            }
+    if (idx >= n) return;  // Ensure we only process valid data indices
+
+    T value = data[idx];
+    for (int u = 0; u < unique_values_; u++) {
+        if (value == unique_vals[u]) {
+            atomicAdd(&histogram[u], 1);
+            break; // Break once we've found a match
         }
     }
 }
@@ -69,9 +61,9 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    int blocksPerGrid = (data.size() + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, data.size(), unique_values_);
 
     // Debug: Check histogram
     std::vector<T> debug_histogram(unique_values_);
@@ -99,3 +91,4 @@ std::vector<T> UniqueFinder<T>::findUnique() {
 
     return debug_output;
 }
+
