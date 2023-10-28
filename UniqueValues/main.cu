@@ -90,13 +90,6 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
             std::set<int>(found_unique_elements.begin(), found_unique_elements.end());
 }
 
-__global__ void count_occurrences_kernel(int* data, int* histogram, int n) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (index < n) {
-        atomicAdd(&histogram[data[index]], 1);
-    }
-}
-
 int main() {
     //std::ofstream json_file("results.json");
     //std::string json_results = "[\n";
@@ -115,37 +108,6 @@ int main() {
         }
         std::cout << std::endl;
 
-        int n = data.size();
-        int nunique = UNIQUE_VALUES;
-
-        int* d_data;
-        int* d_histogram;
-        
-        cudaMalloc(&d_data, n * sizeof(int));
-        cudaMalloc(&d_histogram, nunique * sizeof(int));
-        cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
-        cudaMemset(d_histogram, 0, nunique * sizeof(int));
-
-        int threadsPerBlock = 256;
-        int blocks = (n + threadsPerBlock - 1) / threadsPerBlock;
-        count_occurrences_kernel<<<blocks, threadsPerBlock>>>(d_data, d_histogram, n);
-
-        int* h_histogram = new int[nunique];
-        cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
-
-        std::vector<int> unique_elements;
-        for (int i = 0; i < nunique; i++) {
-            if (h_histogram[i] == 1) {
-                unique_elements.push_back(i);
-                std::cout << i << " ";
-            }
-        }
-
-        cudaFree(d_data);
-        cudaFree(d_histogram);
-        delete[] h_histogram;
-        
-        /*
         UniqueFinder<int> finder;
 
         allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(numbers, UNIQUE_VALUES); }));
@@ -153,7 +115,6 @@ int main() {
         std::vector<int> unique_elements;
 
         get_unique_times.push_back(time_function([&]() { unique_elements = finder.find_unique(); }));
-        */
 
         bool is_correct = check_correctness(data, unique_elements);
 
