@@ -6,6 +6,11 @@ enum { BLOCK_SIZE = 32 };
 
 template <typename T>
 __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        printf("From kernel: First element = %d\n", data[0]);
+    }
+    T value = data[idx];
+
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (idx >= n) return;  // Ensure we only process valid data indices
