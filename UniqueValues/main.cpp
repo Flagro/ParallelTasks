@@ -68,9 +68,7 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
             true_unique_values.push_back(key);
         }
     }
-    if (true_unique_values.size() != found_unique_elements.size()) {
-        return false;
-    }
+
     std::cout << "True unique values: ";
     for (auto val: true_unique_values) {
         std::cout << val << " ";
@@ -78,6 +76,10 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     std::cout << std::endl << "Found unique values: ";
     for (auto val: found_unique_elements) {
         std::cout << val << " ";
+    }
+
+    if (true_unique_values.size() != found_unique_elements.size()) {
+        return false;
     }
 
     return std::set<int>(true_unique_values.begin(), true_unique_values.end()) == 
