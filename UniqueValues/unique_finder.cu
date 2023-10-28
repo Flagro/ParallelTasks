@@ -39,6 +39,12 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique)
 
     // Copy data to device
     cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
+    cudaError_t err = cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        std::cerr << "Error copying data to device: " << cudaGetErrorString(err) << std::endl;
+        // Handle the error, e.g., by exiting or throwing an exception
+        exit(1);
+    }
 
     // Initialize histogram and unique counter to zero
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
