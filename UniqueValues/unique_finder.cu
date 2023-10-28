@@ -62,6 +62,11 @@ std::vector<T> UniqueFinder<T>::find_unique() {
     int gridSize = (data_size_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
     histogramKernel<<<gridSize, BLOCK_SIZE>>>(d_data, d_histogram, data_size_, nunique_);
 
+    std::vector<T> host_histogram(nunique_);
+    cudaMemcpy(host_histogram.data(), d_histogram, nunique_ * sizeof(T), cudaMemcpyDeviceToHost);
+    for (size_t i = 0; i < nunique_; i++) {
+        std::cout << "Value: " << i << ", Count: " << host_histogram[i] << std::endl;
+    }
     // Find unique values
     T* d_output;
     cudaMalloc((void**)&d_output, nunique_ * sizeof(T));
