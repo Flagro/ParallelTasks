@@ -11,8 +11,10 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
     long long globalId = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Initialize local histogram in shared memory
-    for (int i = threadId; i < nunique; i += blockDim.x) {
-        local_histogram[i] = 0;
+    for (long long i = threadId; i < nunique; i += blockDim.x) {
+        if (i < nunique) {
+            local_histogram[i] = 0;
+        }
     }
     __syncthreads();
 
@@ -26,8 +28,10 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
     __syncthreads();
 
     // Update global histogram from local histograms
-    for (int i = threadId; i < nunique; i += blockDim.x) {
-        atomicAdd(&global_histogram[i], local_histogram[i]);
+    for (long long i = threadId; i < nunique; i += blockDim.x) {
+        if (i < nunique) {
+            atomicAdd(&global_histogram[i], local_histogram[i]);
+        }
     }
 }
 
