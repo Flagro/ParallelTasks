@@ -25,10 +25,23 @@ __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, i
 }
 
 template <typename T>
+__global__ void filterUnique(T *histogram, T *output, int n, int* count) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (idx >= n) return;
+
+    if (histogram[idx] == 1) {
+        int pos = atomicAdd(count, 1);  // Safely increment the counter and get the current position
+        output[pos] = idx;  // Store the unique value in the output array
+    }
+}
+
+template <typename T>
 UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_values_(nunique) {
     // Memory allocations and data copying
     cudaMalloc(&d_data_, data.size() * sizeof(T));
     cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));
+    cudaMalloc(&d_unique_elements_, unique_values_ * sizeof(T));
     cudaMalloc(&d_histogram_, unique_values_ * sizeof(T));
 
     histogram_.resize(unique_values_, 0);
@@ -47,22 +60,26 @@ UniqueFinder<T>::~UniqueFinder() {
     // Cleanup
     cudaFree(d_data_);
     cudaFree(d_unique_values_);
+    cudaFree(d_unique_elements_);
     cudaFree(d_histogram_);
 }
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+    ...
+    // After the histogram is computed:
+    int* d_count;
+    cudaMalloc(&d_count, sizeof(int));
+    cudaMemset(d_count, 0, sizeof(int));  // Initialize the count to 0
 
-    cudaMemcpy(histogram_.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
+    filterUnique<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_elements_, unique_values_, d_count);
 
-    std::vector<T> unique_elements;
-    for (int i = 0; i < unique_values_; i++) {
-        if (histogram_[i] == 1) {
-            unique_elements.push_back(static_cast<T>(i));
-        }
-    }
+    cudaMemcpy(&num_unique_elements_, d_count, sizeof(int), cudaMemcpyDeviceToHost);  // Get the number of unique elements found
+
+    std::vector<T> unique_elements(num_unique_elements_);
+    cudaMemcpy(unique_elements.data(), d_unique_elements_, num_unique_elements_ * sizeof(T), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_count);
 
     return unique_elements;
 }
