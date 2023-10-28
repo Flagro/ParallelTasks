@@ -4,12 +4,11 @@
 
 enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 4096 };
 
-/*
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
 
     int threadId = threadIdx.x;
-    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    long long globalId = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Initialize local histogram in shared memory
     for (int i = threadId; i < nunique; i += blockDim.x) {
@@ -19,7 +18,7 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
 
     // Each thread processes a chunk of data and updates the local histogram
     for (int i = 0; i < chunk_size; i++) {
-        int dataIdx = globalId * chunk_size + i;
+        long long dataIdx = (long long) globalId * chunk_size + i;
         if (dataIdx < n) {
             atomicAdd(&local_histogram[data[dataIdx]], 1);
         }
@@ -31,8 +30,8 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
         atomicAdd(&global_histogram[i], local_histogram[i]);
     }
 }
-*/
 
+/*
 __global__ void count_occurrences_kernel(int* data, int* histogram, int n, int nunique, int chunk_size) {
     int globalId = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -44,6 +43,7 @@ __global__ void count_occurrences_kernel(int* data, int* histogram, int n, int n
         }
     }
 }
+*/
 
 __global__ void histogram_to_binary(int* histogram, int* binary, int nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
