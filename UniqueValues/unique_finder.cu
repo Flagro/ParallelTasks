@@ -5,12 +5,7 @@
 template <typename T>
 __global__ void count_occurrences_kernel(T* data, int* histogram, int n, int nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (index < n && (data[index] < 0 || data[index] >= nunique)) {
-        printf("Invalid data value at index %d: %d\n", index, data[index]);
-        return;
-    }
     if (index < n) {
-        printf("Invalid data value at index %d: %d\n", index, data[index]);
         atomicAdd(&histogram[data[index]], 1);
     }
 }
@@ -33,7 +28,7 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, int nunique) {
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMemcpy: " << cudaGetErrorString(err) << std::endl;
     }
-    err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    err = cudaMemset(d_histogram, 155, nunique * sizeof(int));
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMemset: " << cudaGetErrorString(err) << std::endl;
     }
@@ -49,7 +44,7 @@ template <typename T>
 std::vector<T> UniqueFinder<T>::find_unique() {
     cudaDeviceSynchronize();
 
-    count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size, nunique);
+    #count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size, nunique);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
