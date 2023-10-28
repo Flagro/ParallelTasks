@@ -100,7 +100,7 @@ __global__ void count_occurrences_kernel(int* data, int* histogram, int n) {
 int main() {
     std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
     int n = data.size();
-    int nunique = 10;
+    int nunique = UNIQUE_VALUES;
 
     int* d_data;
     int* d_histogram;
@@ -118,9 +118,10 @@ int main() {
     cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < nunique; i++) {
-        if (h_histogram[i] == 1) {
-            std::cout << i << " ";
-        }
+        std::cout << i << " " << h_histogram[i] << std::endl;
+        //if (h_histogram[i] == 1) {
+        //    std::cout << i << " ";
+        //}
     }
 
     cudaFree(d_data);
