@@ -39,10 +39,7 @@ std::vector<int> generate_random_numbers(int n, int unique_values, int occur_onc
         numbers.push_back(val);
     }
 
-    std::random_device rd;
-    std::mt19937 g(rd());
-
-    std::shuffle(numbers.begin(), numbers.end(), g);
+    std::shuffle(numbers.begin(), numbers.end(), gen);
 
     return numbers;
 }
