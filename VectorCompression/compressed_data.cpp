@@ -39,7 +39,9 @@ CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
 
     double max_entropy = std::log2(max_value + 1);
 
-    if (input.size() < 1000 || entropy / max_entropy > 0.95) {
+    bool huffmanBeneficial = entropy < 0.85 * max_entropy && input.size() > 50000;
+
+    if (!huffmanBeneficial) {
         data_format_ = std::make_unique<BitsetData<T>>(input, max_value);
     } else {
         data_format_ = std::make_unique<HuffmanData<T>>(input, max_value);
