@@ -42,10 +42,16 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::find_unique() {
-    count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size);
+    err = count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size);
+    if (err != cudaSuccess) {
+        std::cerr << "Error during kernel execution: " << cudaGetErrorString(err) << std::endl;
+    }
 
     int* h_histogram = new int[nunique];
-    cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) {
+        std::cerr << "Error during cudaMemcpy: " << cudaGetErrorString(err) << std::endl;
+    }
 
     std::vector<T> unique_values;
     for (size_t i = 0; i < nunique; i++) {
