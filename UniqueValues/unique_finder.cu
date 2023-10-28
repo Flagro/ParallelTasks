@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
+enum { BLOCK_SIZE = 256 };
+
 __global__ void count_occurrences_kernel(int* data, int* histogram, int n) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < n) {
@@ -29,9 +31,8 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
 
-    int threadsPerBlock = 256;
-    int blocks = (n + threadsPerBlock - 1) / threadsPerBlock;
-    count_occurrences_kernel<<<blocks, threadsPerBlock>>>(d_data, d_histogram, n);
+    int blocks_count = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    count_occurrences_kernel<<<blocks, BLOCK_SIZE>>>(d_data, d_histogram, n);
 
     int* h_histogram = new int[nunique];
     cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
@@ -40,7 +41,6 @@ std::vector<int> UniqueFinder::find_unique() {
     for (int i = 0; i < nunique; i++) {
         if (h_histogram[i] == 1) {
             unique_elements.push_back(i);
-            std::cout << i << " ";
         }
     }
 
