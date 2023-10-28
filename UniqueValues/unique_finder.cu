@@ -15,7 +15,7 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique) {
     data_size = data.size();
     this->nunique = nunique;
 
-    cudaError_t err = ccudaMalloc(&d_data, data_size * sizeof(T));
+    cudaError_t err = cudaMalloc(&d_data, data_size * sizeof(T));
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMalloc: " << cudaGetErrorString(err) << std::endl;
     }
