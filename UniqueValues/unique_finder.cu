@@ -33,13 +33,25 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique)
 
     // Allocate device memory for data, histogram, and unique values
     cudaMalloc(&d_data, data_size * sizeof(T));
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaMalloc(&d_histogram, nunique * sizeof(int));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaMalloc(&d_unique_values, nunique * sizeof(T));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaMalloc(&d_unique_counter, sizeof(int));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
 
     // Copy data to device
     cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
-    cudaError_t err = cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         std::cerr << "Error copying data to device: " << cudaGetErrorString(err) << std::endl;
         // Handle the error, e.g., by exiting or throwing an exception
