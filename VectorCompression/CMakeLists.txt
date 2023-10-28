@@ -24,6 +24,7 @@ add_executable(CompressedDataApp
     main.cpp
     compressed_data.cpp
     huffman_data.cpp
+    bitset_data.cpp
 )
 
 # Link the OpenMP libraries

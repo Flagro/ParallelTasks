@@ -6,14 +6,14 @@
 template <typename T>
 class BitsetData : public DataFormat<T> {
 public:
-    explicit BitsetData(std::vector<T>&& dense_array, size_t original_size);
+    explicit BitsetData(const std::vector<T>& input_array, size_t max_value);
 
     std::vector<T> get_data() const override;
     size_t get_size() const override;
 
 private:
-    std::vector<T> dense_array_;
-    size_t original_size_;
+    std::vector<bool> compressed_data_;
+    int bits_per_number_; // Number of bits required for each number
 };
 
 // Explicit template instantiation for common types

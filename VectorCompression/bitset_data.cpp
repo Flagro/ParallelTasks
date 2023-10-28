@@ -1,27 +1,35 @@
-#include "omp.h"
-#include "bitset_data.hpp"
+#include "BitsetData.hpp"
+#include <cmath>
 
 template <typename T>
-BitsetData<T>::BitsetData(std::vector<T>&& dense_array, size_t original_size)
-    : dense_array_(std::move(dense_array)), original_size_(original_size) {}
+BitsetData<T>::BitsetData(const std::vector<T>& input_array, size_t max_value) {
+    bits_per_number_ = std::ceil(std::log2(max_value + 1)); // calculate bits needed
+    compressed_data_.reserve(input_array.size() * bits_per_number_); // Reserve space
+    
+    for (T num : input_array) {
+        for (int i = bits_per_number_ - 1; i >= 0; --i) {
+            compressed_data_.push_back((num >> i) & 1);
+        }
+    }
+}
 
 template <typename T>
 std::vector<T> BitsetData<T>::get_data() const {
-    std::vector<T> original_data(original_size_);
-    #pragma omp parallel for
-    for (T i = 0; i < dense_array_.size(); ++i) {
-        size_t pos = 0;  // Starting position for this value
-        for (T j = 0; j < i; ++j) {
-            pos += dense_array_[j];
+    std::vector<T> decompressed_data;
+    decompressed_data.reserve(compressed_data_.size() / bits_per_number_);
+
+    for (size_t i = 0; i < compressed_data_.size(); i += bits_per_number_) {
+        T num = 0;
+        for (int j = bits_per_number_ - 1; j >= 0; --j) {
+            num |= (compressed_data_[i + bits_per_number_ - 1 - j] << j);
         }
-        for (T j = 0; j < dense_array_[i]; ++j) {
-            original_data[pos + j] = i;
-        }
+        decompressed_data.push_back(num);
     }
-    return original_data;
+
+    return decompressed_data;
 }
 
 template <typename T>
 size_t BitsetData<T>::get_size() const {
-    return sizeof(T) * dense_array_.capacity() + sizeof(size_t);
+    return compressed_data_.size() / 8 + (compressed_data_.size() % 8 != 0); // Convert from bits to bytes
 }
