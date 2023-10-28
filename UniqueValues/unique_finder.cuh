@@ -12,12 +12,12 @@ public:
     std::vector<T> find_unique();
 
 private:
-    T* d_data = nullptr;                 // Device pointer for input data
-    int* d_histogram = nullptr;          // Device pointer for histogram
-    T* d_unique_values = nullptr;        // Device pointer for storing unique values
-    int* d_unique_counter = nullptr;     // Device pointer for counting unique values
-    size_t data_size;                    // Size of the input data
-    size_t nunique;                      // Number of unique values
+    T* d_data = nullptr;
+    int* d_histogram = nullptr;
+    size_t data_size = 0;
+    size_t nunique = 0;
+
+    __global__ void count_occurrences_kernel(T* data, int* histogram, size_t n);
 };
 
 // Explicit template instantiation for common types
