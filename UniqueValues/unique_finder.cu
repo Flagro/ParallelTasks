@@ -16,15 +16,17 @@ __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, i
         end = n;
     }
 
-    for (int u = 0; u < unique_values_; u++) {
-        T unique_value = unique_vals[u];
-        for (int i = start; i < end; i++) {
-            if (data[i] == unique_value) {
-                atomicAdd(&histogram[unique_value], 1);
+    for (int i = start; i < end; i++) {
+        T value = data[i];
+        for (int u = 0; u < unique_values_; u++) {
+            if (value == unique_vals[u]) {
+                atomicAdd(&histogram[u], 1);
+                break; // Break once we've found a match
             }
         }
     }
 }
+
 
 template <typename T>
 __global__ void extractUniqueValues(T *unique_vals, T *histogram, T *output, int *output_count, int unique_values_) {
