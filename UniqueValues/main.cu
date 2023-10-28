@@ -65,7 +65,9 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     }
     std::cout << "True histogram:" << std::endl;
     std::vector<int> true_unique_values;
-    for (auto& [key, value] : elements_counts) {
+    for (auto& el : elements_counts) {
+        int key = el.first;
+        int value = el.second;
         std::cout << key << ": " << value << std::endl;
         if (value == 1) {
             true_unique_values.push_back(key);
