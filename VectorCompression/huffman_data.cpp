@@ -1,4 +1,4 @@
-#include "HuffmanData.hpp"
+#include "huffman_data.hpp"
 #include <queue>
 #include <omp.h>
 
