@@ -6,6 +6,7 @@
 #include <functional>
 #include <fstream>
 #include <unordered_map>
+#include <set>
 #include "unique_finder.cuh"
 
 enum Constants {
@@ -70,7 +71,8 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     if (true_unique_values.size() != found_unique_elements.size()) {
         return false;
     }
-    return true_unique_values == found_unique_elements;
+    return std::set<int>(true_unique_values.begin(), true_unique_values.end()) == 
+            std::set<int>(found_unique_elements.begin(), found_unique_elements.end());
 }
 
 int main() {
