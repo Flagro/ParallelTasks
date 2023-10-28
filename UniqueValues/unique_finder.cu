@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 256
 
 template <typename T>
 __global__ void count_occurrences_kernel(const T* data, size_t data_size, int* histogram, size_t nunique, T* unique_values) {

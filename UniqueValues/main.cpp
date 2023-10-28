@@ -9,9 +9,9 @@
 #include "unique_finder.cuh"
 
 enum Constants {
-    N = 100,       // Number of random integers
+    N = 1000,       // Number of random integers
     T = 10,          // Number of trials
-    UNIQUE_VALUES = 70,  // limiting to 1000 unique values
+    UNIQUE_VALUES = 700,  // limiting to 1000 unique values
 };
 
 std::vector<int> generate_random_numbers(int n, int unique_values) {
