@@ -15,11 +15,23 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique) {
     data_size = data.size();
     this->nunique = nunique;
 
-    cudaMalloc(&d_data, data_size * sizeof(T));
-    cudaMalloc(&d_histogram, nunique * sizeof(int));
+    cudaError_t err = ccudaMalloc(&d_data, data_size * sizeof(T));
+    if (err != cudaSuccess) {
+        std::cerr << "Error during cudaMalloc: " << cudaGetErrorString(err) << std::endl;
+    }
+    err = cudaMalloc(&d_histogram, nunique * sizeof(int));
+    if (err != cudaSuccess) {
+        std::cerr << "Error during cudaMalloc: " << cudaGetErrorString(err) << std::endl;
+    }
 
-    cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    err = cudaMemcpy(d_data, data.data(), data_size * sizeof(T), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        std::cerr << "Error during cudaMemcpy: " << cudaGetErrorString(err) << std::endl;
+    }
+    err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    if (err != cudaSuccess) {
+        std::cerr << "Error during cudaMemset: " << cudaGetErrorString(err) << std::endl;
+    }
 }
 
 template <typename T>
