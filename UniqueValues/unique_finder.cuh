@@ -5,7 +5,7 @@
 class UniqueFinder {
 public:
     UniqueFinder() = default;
-    UniqueFinder(const std::vector<int>& data, int nunique);
+    UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) : data(data), unique_values(nunique) {}
 
     std::vector<int> find_unique();
 

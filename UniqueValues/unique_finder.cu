@@ -8,13 +8,11 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
     extern __shared__ int local_histogram[];
 
     int threadId = threadIdx.x;
-    long long globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Initialize local histogram in shared memory
-    for (long long i = threadId; i < nunique; i += blockDim.x) {
-        if (i < nunique) {
-            local_histogram[i] = 0;
-        }
+    for (int i = threadId; i < nunique; i += blockDim.x) {
+        local_histogram[i] = 0;
     }
     __syncthreads();
 
@@ -28,26 +26,10 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
     __syncthreads();
 
     // Update global histogram from local histograms
-    for (long long i = threadId; i < nunique; i += blockDim.x) {
-        if (i < nunique) {
-            atomicAdd(&global_histogram[i], local_histogram[i]);
-        }
+    for (int i = threadId; i < nunique; i += blockDim.x) {
+        atomicAdd(&global_histogram[i], local_histogram[i]);
     }
 }
-
-/*
-__global__ void count_occurrences_kernel(int* data, int* histogram, int n, int nunique, int chunk_size) {
-    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Each thread processes a chunk of data and updates the histogram directly
-    for (int i = 0; i < chunk_size; i++) {
-        long long dataIdx = (long long) globalId * chunk_size + i;
-        if (dataIdx < n) {
-            atomicAdd(&histogram[data[dataIdx]], 1);
-        }
-    }
-}
-*/
 
 __global__ void histogram_to_binary(int* histogram, int* binary, int nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -89,46 +71,22 @@ __global__ void extract_unique_values(int* histogram, int* prefixSum, int* uniqu
     }
 }
 
-UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) : data(data), unique_values(nunique) {}
-
 std::vector<int> UniqueFinder::find_unique() {
     int n = this->data.size();
     int nunique = this->unique_values;
 
     int* d_data;
     int* d_histogram;
-    cudaError_t err;
 
-    err = cudaMalloc(&d_data, n * sizeof(int));
-    cudaDeviceSynchronize();
-    if (err != cudaSuccess) {
-        std::cerr << "Failed to allocate device memory: " << cudaGetErrorString(err) << std::endl;
-    }
-
+    cudaMalloc(&d_data, n * sizeof(int));
     cudaMalloc(&d_histogram, nunique * sizeof(int));
-    cudaDeviceSynchronize();
-
-    err = cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-    if (err != cudaSuccess) {
-        std::cerr << "Failed to copy to a device memory: " << cudaGetErrorString(err) << std::endl;
-    }
-
-    err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
-    cudaDeviceSynchronize();
-    if (err != cudaSuccess) {
-        std::cerr << "Failed to memset: " << cudaGetErrorString(err) << std::endl;
-    }
+    cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemset(d_histogram, 0, nunique * sizeof(int));
 
     // Obtain the histogram of the data
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
     count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
-    // count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
-    cudaDeviceSynchronize();
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        std::cerr << "Failed to launch kernel: " << cudaGetErrorString(err) << std::endl;
-    }
+    cudaFree(d_data);
 
     // Convert histogram to binary format
     int* d_binary;
@@ -143,25 +101,22 @@ std::vector<int> UniqueFinder::find_unique() {
     // Compute prefix sum
     int blockSize = min(nunique, BLOCK_SIZE);
     simple_prefix_sum<<<1, blockSize, blockSize * sizeof(int)>>>(d_binary, d_prefix_sum, nunique);
+    cudaFree(d_binary);
 
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_prefix_sum, d_unique_values, nunique);
+    cudaFree(d_histogram);
 
     // Get the number of unique values
     int num_unique;
     cudaMemcpy(&num_unique, &d_prefix_sum[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(d_prefix_sum);
 
     // Allocate space for these unique values on the host
     std::vector<int> unique_elements(num_unique);
 
     // Copy the unique values from the device to the host memory
     cudaMemcpy(unique_elements.data(), d_unique_values, num_unique * sizeof(int), cudaMemcpyDeviceToHost);
-
-    // Clean up
-    cudaFree(d_data);
-    cudaFree(d_histogram);
-    cudaFree(d_prefix_sum);
-    cudaFree(d_binary);
     cudaFree(d_unique_values);
 
     return unique_elements;
