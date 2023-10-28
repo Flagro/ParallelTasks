@@ -98,6 +98,11 @@ int main() {
     std::cout << "Started running..." << std::endl;
     for (int trial = 0; trial < T; ++trial) {
         std::vector<int> numbers = generate_random_numbers(N, UNIQUE_VALUES);
+        std::cout << "Generated numbers: ";
+        for (auto val : numbers) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
 
         UniqueFinder<int> finder;
 
