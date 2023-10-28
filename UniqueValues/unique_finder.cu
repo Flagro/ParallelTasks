@@ -115,7 +115,9 @@ std::vector<int> UniqueFinder::find_unique() {
 
     // Obtain the histogram of the data
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
+    // count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
+    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
+
     cudaDeviceSynchronize();
     err = cudaGetLastError();
     if (err != cudaSuccess) {
