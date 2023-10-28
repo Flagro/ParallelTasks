@@ -134,6 +134,21 @@ UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) {
 UniqueFinder::~UniqueFinder() {
 }
 
+void recursive_prefix_sum(int* d_input, int* d_output, int* d_blockSums, int length) {
+    int numBlocks = (length + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
+    if (numBlocks > 1) {
+        // If numBlocks is greater than BLOCK_SIZE, then we need another layer of block sums
+        int* d_nextBlockSums;
+        cudaMalloc(&d_nextBlockSums, numBlocks * sizeof(int));
+        recursive_prefix_sum(d_blockSums, d_blockSums, d_nextBlockSums, numBlocks);
+        cudaFree(d_nextBlockSums);
+    }
+    prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_input, d_output, d_blockSums, length);
+    cudaDeviceSynchronize();
+    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_output, d_blockSums, length);
+    cudaDeviceSynchronize();
+}
+
 std::vector<int> UniqueFinder::find_unique() {
     int n = this->data.size();
     int nunique = this->unique_values;
@@ -161,37 +176,18 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMalloc(&d_unique_values, nunique * sizeof(int));
 
     // Compute prefix sum
-    int numBlocks = (n + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
+    int numBlocks = (nunique + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
     int* d_blockSums;
     cudaMalloc(&d_blockSums, numBlocks * sizeof(int));
+    recursive_prefix_sum(d_binary, d_prefix_sum, d_blockSums, nunique);
+    cudaFree(d_blockSums);
+    cudaDeviceSynchronize();
 
-    // First pass
-    prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_binary, d_prefix_sum, d_blockSums, nunique);
-    cudaError_t err;
-    cudaDeviceSynchronize();
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        printf("CUDA error after launching [prefix_sum_first_pass]: %s\n", cudaGetErrorString(err));
-    }
-
-    // Compute prefix sum for the block sums
-    prefix_sum_first_pass<<<1, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_blockSums, d_blockSums, nullptr, numBlocks);
-    cudaDeviceSynchronize();
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        printf("CUDA error after launching [prefix_sum_first_pass #2]: %s\n", cudaGetErrorString(err));
-    }
-    // Second pass
-    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_prefix_sum, d_blockSums, nunique);
-    cudaDeviceSynchronize();
-    err = cudaGetLastError();
+    cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("CUDA error after launching [add_block_sums]: %s\n", cudaGetErrorString(err));
     }
 
-
-
-    cudaFree(d_blockSums);
     // After computing prefix sum
     int* h_prefix_sum_debug = new int[nunique];
     cudaMemcpy(h_prefix_sum_debug, d_prefix_sum, nunique * sizeof(int), cudaMemcpyDeviceToHost);
