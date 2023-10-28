@@ -8,7 +8,8 @@ This repository contains the implementation of tasks i got as homework for a job
 - Implementation should be multithreaded and should be ran on CPU.
 
 ### Task2 - unique values with GPU
-- The task is to generate (on CPU) a sequence of 10 millions int32 integers with at maximum 1000 unique values and implement an algorithm for obtaining all the values that are only occur once in the sequence on GPU.
+- The task is to generate a sequence of 10 millions int32 integers with at maximum 1000 unique values and implement an algorithm for obtaining all the values that are only occur once in the sequence.
+- The generation of a sequence should be on CPU and the algorithm for unique values should be on GPU.
 
 ## Comments on Task1:
 - The formulation of the first task (based on the restrictions that all integers are in range [1...100]) looked like it meant to be a compression of a sorted sequence (or a compression where the order of a sequence could be lost) so i implemented both variants of the task: the folder **SetCompression** containts the solution for the case in which the order after decompression doesn't matter and folder **VectorCompression** contains the solution for the case in which the order matters.
