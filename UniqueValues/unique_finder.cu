@@ -25,11 +25,22 @@ __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, i
 }
 
 template <typename T>
+__global__ void filterUniqueValues(T *histogram, T *unique_values, T *output, int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n && histogram[idx] == 1) {
+        // Use atomicAdd to get a unique index in the output array
+        int pos = atomicAdd(&output[0], 1);
+        output[pos + 1] = idx;  // +1 because output[0] is used for count
+    }
+}
+
+template <typename T>
 UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_values_(nunique) {
     // Memory allocations and data copying
     cudaMalloc(&d_data_, data.size() * sizeof(T));
     cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));
     cudaMalloc(&d_histogram_, unique_values_ * sizeof(T));
+    cudaMalloc(&d_unique_elements_, (unique_values_ + 1) * sizeof(T));  // +1 to store the count
 
     histogram_.resize(unique_values_, 0);
     std::vector<T> unique_values(unique_values_);
@@ -40,6 +51,7 @@ UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_val
     cudaMemcpy(d_data_, data.data(), data.size() * sizeof(T), cudaMemcpyHostToDevice);
     cudaMemcpy(d_unique_values_, unique_values.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
     cudaMemcpy(d_histogram_, histogram_.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemset(d_unique_elements_, 0, sizeof(T));  // Set count to 0
 }
 
 template <typename T>
@@ -48,21 +60,21 @@ UniqueFinder<T>::~UniqueFinder() {
     cudaFree(d_data_);
     cudaFree(d_unique_values_);
     cudaFree(d_histogram_);
+    cudaFree(d_unique_elements_);
 }
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
     int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
     countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+    filterUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_values_, d_unique_elements_, unique_values_);
 
-    cudaMemcpy(histogram_.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
+    int unique_count;
+    cudaMemcpy(&unique_count, d_unique_elements_, sizeof(T), cudaMemcpyDeviceToHost);
 
-    std::vector<T> unique_elements;
-    for (int i = 0; i < unique_values_; i++) {
-        if (histogram_[i] == 1) {
-            unique_elements.push_back(static_cast<T>(i));
-        }
-    }
+    std::vector<T> unique_elements(unique_count);
+    cudaMemcpy(unique_elements.data(), d_unique_elements_ + 1, unique_count * sizeof(T), cudaMemcpyDeviceToHost);
 
     return unique_elements;
 }
