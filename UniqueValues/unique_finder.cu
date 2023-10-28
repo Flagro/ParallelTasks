@@ -107,13 +107,20 @@ std::vector<int> UniqueFinder::find_unique() {
     if (err != cudaSuccess) {
         std::cerr << "Failed to copy to a device memory: " << cudaGetErrorString(err) << std::endl;
     }
-    cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
     cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::cerr << "Failed to memset: " << cudaGetErrorString(err) << std::endl;
+    }
 
     // Obtain the histogram of the data
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
     count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
     cudaDeviceSynchronize();
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "Failed to launch kernel: " << cudaGetErrorString(err) << std::endl;
+    }
     // After generating the histogram
     int* h_histogram_debug = new int[nunique];
     cudaMemcpy(h_histogram_debug, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
