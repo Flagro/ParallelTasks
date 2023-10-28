@@ -6,7 +6,7 @@ template <typename T>
 class UniqueFinder {
 public:
     UniqueFinder() = default;
-    UniqueFinder(const std::vector<T>& data, size_t nunique);
+    UniqueFinder(const std::vector<T>& data, int nunique);
     ~UniqueFinder();
 
     std::vector<T> find_unique();
@@ -14,8 +14,8 @@ public:
 private:
     T* d_data = nullptr;
     int* d_histogram = nullptr;
-    size_t data_size = 0;
-    size_t nunique = 0;
+    int data_size = 0;
+    int nunique = 0;
 };
 
 // Explicit template instantiation for common types

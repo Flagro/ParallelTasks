@@ -37,7 +37,7 @@ double time_function(const std::function<void()>& func) {
 }
 
 double get_median(std::vector<double>& times) {
-    size_t size = times.size();
+    int size = times.size();
     sort(times.begin(), times.end());
     if (size % 2 == 0) {
         return (times[size / 2 - 1] + times[size / 2]) / 2;
@@ -91,8 +91,8 @@ int main() {
     std::ofstream json_file("results.json");
     std::string json_results = "[\n";
 
-    std::vector<double> allocation_times, get_unique_times, get_size_times;
-    std::vector<size_t> sizes;
+    std::vector<double> allocation_times, get_unique_times, get_intimes;
+    std::vector<int> sizes;
     bool correctness = true;
 
     std::cout << "Started running..." << std::endl;
