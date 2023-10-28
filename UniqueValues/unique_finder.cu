@@ -5,6 +5,10 @@
 template <typename T>
 __global__ void count_occurrences_kernel(T* data, int* histogram, size_t n) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
+    if (index < n && (data[index] < 0 || data[index] >= nunique)) {
+        printf("Invalid data value at index %d: %d\n", index, data[index]);
+        return;
+    }
     if (index < n) {
         atomicAdd(&histogram[data[index]], 1);
     }
