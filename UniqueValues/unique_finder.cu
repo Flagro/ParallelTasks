@@ -114,11 +114,10 @@ std::vector<int> UniqueFinder::find_unique() {
 
     // 1. Get the number of unique values
     int num_unique;
-    cudaMemcpy(&num_unique, &d_binary[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&num_unique, &d_prefix_sum[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
 
     // 2. Allocate space for these unique values on the host
     std::vector<int> unique_elements(num_unique);
-    std::cout << num_unique << std::endl;
 
     // 3. Copy the unique values from the device to the host memory
     cudaMemcpy(unique_elements.data(), d_unique_values, num_unique * sizeof(int), cudaMemcpyDeviceToHost);
