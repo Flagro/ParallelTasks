@@ -1,4 +1,4 @@
-#include "BitsetData.hpp"
+#include "bitset_data.hpp"
 #include <cmath>
 
 template <typename T>
