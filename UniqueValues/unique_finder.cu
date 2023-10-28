@@ -167,12 +167,29 @@ std::vector<int> UniqueFinder::find_unique() {
 
     // First pass
     prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_binary, d_prefix_sum, d_blockSums, nunique);
+    cudaError_t err;
+    cudaDeviceSynchronize();
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("CUDA error after launching [prefix_sum_first_pass]: %s\n", cudaGetErrorString(err));
+    }
 
     // Compute prefix sum for the block sums
     prefix_sum_first_pass<<<1, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_blockSums, d_blockSums, nullptr, numBlocks);
-
+    cudaDeviceSynchronize();
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("CUDA error after launching [prefix_sum_first_pass #2]: %s\n", cudaGetErrorString(err));
+    }
     // Second pass
-    add_block_sums<<<numBlocks, BLOCK_SIZE * 2>>>(d_prefix_sum, d_blockSums, nunique);
+    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_prefix_sum, d_blockSums, nunique);
+    cudaDeviceSynchronize();
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("CUDA error after launching [add_block_sums]: %s\n", cudaGetErrorString(err));
+    }
+
+
 
     cudaFree(d_blockSums);
     // After computing prefix sum
