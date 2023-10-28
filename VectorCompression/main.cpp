@@ -60,7 +60,7 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     if (original_data.size() != reconstructed_data.size()) {
         return false;
     }
-    return original_data_set == reconstructed_data_set;
+    return original_data == reconstructed_data;
 }
 
 int main() {
