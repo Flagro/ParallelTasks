@@ -10,7 +10,7 @@
 #include "unique_finder.cuh"
 
 enum Constants {
-    N = 30,       // Number of random integers
+    N = 100,       // Number of random integers
     T = 10,          // Number of trials
     UNIQUE_VALUES = 1000,  // limiting to 1000 unique values
 };
