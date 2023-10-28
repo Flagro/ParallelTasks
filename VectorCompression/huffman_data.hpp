@@ -24,8 +24,11 @@ private:
     std::vector<bool> compressed_data_;
 
     struct Compare {
+        const std::vector<unsigned>& freqRef;
+        Compare(const std::vector<unsigned>& freq) : freqRef(freq) {}
+        
         bool operator()(int l, int r) const {
-            return freq_array_[l] > freq_array_[r];
+            return freqRef[l] > freqRef[r];
         }
     };
 };
