@@ -32,7 +32,7 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
 
     int blocks_count = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    count_occurrences_kernel<<<blocks, BLOCK_SIZE>>>(d_data, d_histogram, n);
+    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n);
 
     int* h_histogram = new int[nunique];
     cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
