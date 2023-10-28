@@ -22,10 +22,11 @@ This repository contains the implementation of tasks i got as homework for a job
 - The Huffman coding was promising for the second approach of data compression but it still had too much of an overhead for containing a tree so the criteria for the Huffman approach was decided to be more strict.
 
 ## Comments on Task2:
-- 
+- Since CUDA is the only GPU parallel programming kit i'm familiar with and i'm driving Apple Silicon chip the testing were done on Jupyter Notebook on free GPU resources in Kaggle.
 
 ## Ways to improve:
 - The implementations obviously could use some documentation.
 - Currently the main.cpp files do have functions that could be moved to a new modules such as json generation module, aggregation functions, etc.
 - Constants in main.cpp files could be passed as executable arguments.
 - Two Task1 implementations could be merged into one.
+- CMake could be merged for all the tasks by implementing different targets
