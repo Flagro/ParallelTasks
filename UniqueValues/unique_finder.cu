@@ -9,15 +9,15 @@ __global__ void count_occurrences_kernel(int* data, int* histogram, int n) {
     }
 }
 
-UniqueFinder<int>::UniqueFinder(const std::vector<int>& data, int nunique) {
+UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) {
     self.data = data;
     self.unique_values = nunique;
 }
 
-UniqueFinder<int>::~UniqueFinder() {
+UniqueFinder::~UniqueFinder() {
 }
 
-std::vector<int> UniqueFinder<int>::find_unique() {
+std::vector<int> UniqueFinder::find_unique() {
     int n = self.data.size();
     int nunique = self.unique_values;
 
