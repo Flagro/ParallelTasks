@@ -67,11 +67,25 @@ void HuffmanData<T>::generateCodes(int index, const std::vector<bool>& currentCo
 
 template <typename T>
 std::vector<bool> HuffmanData<T>::compress(const std::vector<T>& input) {
-    std::vector<bool> result;
-    for (T val : input) {
-        for (bool bit : codes_[val]) {
-            result.push_back(bit);
+    int num_threads = omp_get_max_threads();
+    std::vector<std::vector<bool>> temp_results(num_threads);
+
+    #pragma omp parallel for
+    for (int t = 0; t < num_threads; t++) {
+        int chunk_size = input.size() / num_threads;
+        int start_idx = t * chunk_size;
+        int end_idx = (t == num_threads - 1) ? input.size() : start_idx + chunk_size;
+
+        for (int i = start_idx; i < end_idx; i++) {
+            for (bool bit : codes_[input[i]]) {
+                temp_results[t].push_back(bit);
+            }
         }
+    }
+
+    std::vector<bool> result;
+    for (const auto& vec : temp_results) {
+        result.insert(result.end(), vec.begin(), vec.end());
     }
     return result;
 }
