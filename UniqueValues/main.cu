@@ -7,7 +7,6 @@
 #include <fstream>
 #include <set>
 #include <unordered_map>
-#include <cuda_runtime.h>
 #include "unique_finder.cuh"
 
 enum Constants {
@@ -63,16 +62,16 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     for (auto val: original_data) {
         elements_counts[val]++;
     }
-    std::cout << "True histogram:" << std::endl;
+
     std::vector<int> true_unique_values;
     for (auto& el : elements_counts) {
         int key = el.first;
         int value = el.second;
-        std::cout << key << ": " << value << std::endl;
         if (value == 1) {
             true_unique_values.push_back(key);
         }
     }
+
     std::cout << "True unique values: ";
     for (auto val : true_unique_values) {
         std::cout << val << " ";
@@ -101,12 +100,6 @@ int main() {
     std::cout << "Started running..." << std::endl;
     for (int trial = 0; trial < T; ++trial) {
         std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
-
-        std::cout << "Generated numbers: ";
-        for (auto val : data) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
 
         UniqueFinder<int> finder;
 
