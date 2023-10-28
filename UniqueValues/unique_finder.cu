@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-enum { BLOCK_SIZE = 16 };
+enum { BLOCK_SIZE = 1024 };
 
 template <typename T>
 __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
@@ -40,6 +40,7 @@ UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_val
     cudaMalloc(&d_data_, data.size() * sizeof(T));
     cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));
     cudaMalloc(&d_histogram_, unique_values_ * sizeof(T));
+    cudaMalloc(&d_unique_elements_, (unique_values_ + 1) * sizeof(T));  // +1 to store the count
 
     histogram_.resize(unique_values_, 0);
     std::vector<T> unique_values(unique_values_);
@@ -50,6 +51,7 @@ UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_val
     cudaMemcpy(d_data_, data.data(), data.size() * sizeof(T), cudaMemcpyHostToDevice);
     cudaMemcpy(d_unique_values_, unique_values.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
     cudaMemcpy(d_histogram_, histogram_.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemset(d_unique_elements_, 0, sizeof(T));  // Set count to 0
 }
 
 template <typename T>
@@ -58,47 +60,21 @@ UniqueFinder<T>::~UniqueFinder() {
     cudaFree(d_data_);
     cudaFree(d_unique_values_);
     cudaFree(d_histogram_);
+    cudaFree(d_unique_elements_);
 }
 
-/*
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
     int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
-
-    T *d_unique_elements;
-    int max_unique = unique_values_;  // In the worst case, all values are unique
-    cudaMalloc(&d_unique_elements, (max_unique + 1) * sizeof(T));  // +1 to store the count at the beginning
-    cudaMemset(d_unique_elements, 0, sizeof(T));  // Set count to 0
-
-    filterUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_values_, d_unique_elements, unique_values_);
+    filterUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_values_, d_unique_elements_, unique_values_);
 
     int unique_count;
-    cudaMemcpy(&unique_count, d_unique_elements, sizeof(T), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&unique_count, d_unique_elements_, sizeof(T), cudaMemcpyDeviceToHost);
 
     std::vector<T> unique_elements(unique_count);
-    cudaMemcpy(unique_elements.data(), d_unique_elements + 1, unique_count * sizeof(T), cudaMemcpyDeviceToHost);
-
-    cudaFree(d_unique_elements);
-
-    return unique_elements;
-}
-*/
-
-template <typename T>
-std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
-
-    cudaMemcpy(histogram_.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
-
-    std::vector<T> unique_elements;
-    for (int i = 0; i < unique_values_; i++) {
-        if (histogram_[i] == 1) {
-            unique_elements.push_back(static_cast<T>(i));
-        }
-    }
+    cudaMemcpy(unique_elements.data(), d_unique_elements_ + 1, unique_count * sizeof(T), cudaMemcpyDeviceToHost);
 
     return unique_elements;
 }

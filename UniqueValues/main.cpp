@@ -6,11 +6,10 @@
 #include <functional>
 #include <fstream>
 #include <unordered_map>
-#include <set>
 #include "unique_finder.cuh"
 
 enum Constants {
-    N = 100,       // Number of random integers
+    N = 10000000,       // Number of random integers
     T = 10,          // Number of trials
     UNIQUE_VALUES = 1000,  // limiting to 1000 unique values
 };
@@ -68,23 +67,9 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
             true_unique_values.push_back(key);
         }
     }
-
-    std::cout << "True unique values: ";
-    for (auto val: true_unique_values) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl << "Found unique values: ";
-    for (auto val: found_unique_elements) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
     if (true_unique_values.size() != found_unique_elements.size()) {
         return false;
     }
-
-    //return std::set<int>(true_unique_values.begin(), true_unique_values.end()) == 
-    //        std::set<int>(found_unique_elements.begin(), found_unique_elements.end());
     return true_unique_values == found_unique_elements;
 }
 
