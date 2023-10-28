@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-enum { BLOCK_SIZE = 256 };
+enum { BLOCK_SIZE = 256, CHUNK_SIZE = 512 };
 
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
@@ -51,9 +51,8 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
 
-    int blocks_count = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    int chunk_size = (n + blocks_count * BLOCK_SIZE - 1) / (blocks_count * BLOCK_SIZE);
-    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, chunk_size);
+    int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
 
     int* h_histogram = new int[nunique];
     cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
