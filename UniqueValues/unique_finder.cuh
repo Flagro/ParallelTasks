@@ -20,4 +20,3 @@ private:
 
 // Explicit template instantiation for common types
 template class UniqueFinder<int>;
-template class UniqueFinder<long long>;
