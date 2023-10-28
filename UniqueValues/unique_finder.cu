@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 template <typename T>
-__global__ void count_occurrences_kernel(T* data, int* histogram, size_t n) {
+__global__ void count_occurrences_kernel(T* data, int* histogram, size_t n, size_t nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < n && (data[index] < 0 || data[index] >= nunique)) {
         printf("Invalid data value at index %d: %d\n", index, data[index]);
@@ -48,7 +48,7 @@ template <typename T>
 std::vector<T> UniqueFinder<T>::find_unique() {
     cudaDeviceSynchronize();
 
-    count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size);
+    count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size, nunique);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
