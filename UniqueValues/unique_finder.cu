@@ -3,6 +3,14 @@
 #include <cuda_runtime.h>
 
 template <typename T>
+__global__ void count_occurrences_kernel(T* data, int* histogram, size_t n) {
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    if (index < n) {
+        atomicAdd(&histogram[data[index]], 1);
+    }
+}
+
+template <typename T>
 UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique) {
     data_size = data.size();
     this->nunique = nunique;
@@ -18,14 +26,6 @@ template <typename T>
 UniqueFinder<T>::~UniqueFinder() {
     cudaFree(d_data);
     cudaFree(d_histogram);
-}
-
-template <typename T>
-__global__ void UniqueFinder<T>::count_occurrences_kernel(T* data, int* histogram, size_t n) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (index < n) {
-        atomicAdd(&histogram[data[index]], 1);
-    }
 }
 
 template <typename T>
