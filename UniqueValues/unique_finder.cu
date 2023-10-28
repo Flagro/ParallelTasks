@@ -25,7 +25,7 @@ __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, i
 }
 
 template <typename T>
-UniqueFinder<T>::UniqueFinder(std::vector<T>&& data, size_t nunique): unique_values_(nunique) {
+UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique): unique_values_(nunique) {
     // Memory allocations and data copying
     cudaMalloc(&d_data_, data.size() * sizeof(T));
     cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));

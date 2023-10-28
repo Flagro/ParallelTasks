@@ -97,7 +97,7 @@ int main() {
 
         UniqueFinder<int> finder;
 
-        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(std::move(numbers), UNIQUE_VALUES); }));
+        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(numbers, UNIQUE_VALUES); }));
 
         std::vector<int> unique_elements;
 

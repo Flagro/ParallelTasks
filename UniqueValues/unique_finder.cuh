@@ -6,7 +6,7 @@ template <typename T>
 class UniqueFinder {
 public:
     UniqueFinder() = default;
-    UniqueFinder(std::vector<T>&& data, size_t nunique);
+    UniqueFinder(const std::vector<T>& data, size_t nunique);
     ~UniqueFinder();
 
     std::vector<T> findUnique();
