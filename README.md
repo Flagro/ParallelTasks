@@ -18,6 +18,7 @@ This repository contains the implementation of tasks i got as homework for a job
 - The decompressed data is stored in RAM but the implementation allows it to be easily saved in binary files if needed.
 - I also included the generation of JSON files so it would be easy to analyze/interpret/debug the results with a python scripts.
 - The implementation uses stl containers instead of dynamic memory allocation with **new** but ensures that the capacity of the containers is restricted to take as little space in memory as possible.
+- The Huffman coding was promising for the second approach of data compression but it still had too much of an overhead for containing a tree so the criteria for the Huffman approach was decided to be more strict.
 
 ## Comments on Task2:
 - 
