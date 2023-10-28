@@ -67,6 +67,9 @@ template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
     int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
+    // Reset the count in d_unique_elements_ to 0
+    cudaMemset(d_unique_elements_, 0, sizeof(T));
+
     countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
     filterUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_values_, d_unique_elements_, unique_values_);
 
