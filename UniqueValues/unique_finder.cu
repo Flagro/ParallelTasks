@@ -42,6 +42,8 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique)
 
     std::cout << "TEST ENDED" << std::endl;
 
+    std::cout << data_size << std::endl;
+
     // Allocate device memory for data, histogram, and unique values
     cudaMalloc(&d_data, data_size * sizeof(T));
     err = cudaGetLastError();
