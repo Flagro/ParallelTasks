@@ -122,6 +122,5 @@ std::vector<T> HuffmanData<T>::get_data() const {
 template <typename T>
 size_t HuffmanData<T>::get_size() const {
     return compressed_data_.size() + 
-           data_array_.capacity() * sizeof(T) + 
-           freq_array_.capacity() * sizeof(unsigned);
+           data_array_.capacity() * sizeof(T);
 }
