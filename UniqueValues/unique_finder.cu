@@ -38,70 +38,60 @@ __global__ void histogram_to_binary(int* histogram, int* binary, int nunique) {
     }
 }
 
-__global__ void prefix_sum_first_pass(int* input, int* output, int* blockSums, int n) {
+__global__ void prefix_sum_first_pass(int* input, int* output, int* blockSums, int length) {
     extern __shared__ int temp[];
-
     int threadId = threadIdx.x;
-    int blockId = blockIdx.x;
-    int offset = 1;
+    int globalId = blockIdx.x * blockDim.x + threadId;
 
-    int idx = 2 * threadId + blockId * 2 * blockDim.x;
-    int idxNext = idx + 1;
-
-    // Load input into shared memory
-    temp[2 * threadId] = (idx < n) ? input[idx] : 0;
-    temp[2 * threadId + 1] = (idxNext < n) ? input[idxNext] : 0;
+    // Load input into shared memory.
+    temp[2 * threadId] = (2 * globalId < length) ? input[2 * globalId] : 0;
+    temp[2 * threadId + 1] = (2 * globalId + 1 < length) ? input[2 * globalId + 1] : 0;
     __syncthreads();
 
-    // Up-sweep phase (reduce)
-    for (int d = blockDim.x; d > 0; d >>= 1) {
-        __syncthreads();
-        if (threadId < d) {
-            int ai = offset * (2 * threadId + 1) - 1;
-            int bi = offset * (2 * threadId + 2) - 1;
-            temp[bi] += temp[ai];
+    // Down-sweep
+    for (int offset = 1; offset <= BLOCK_SIZE; offset <<= 1) {
+        int index = (threadId + 1) * offset * 2 - 1;
+        if (index < 2 * BLOCK_SIZE) {
+            temp[index] += temp[index - offset];
         }
-        offset *= 2;
+        __syncthreads();
     }
 
     // Clear the last element
-    if (threadId == 0) {
-        temp[2 * blockDim.x - 1] = 0;
-    }
+    if (threadId == 0) temp[2 * BLOCK_SIZE - 1] = 0;
 
-    // Down-sweep phase (post-reduce)
-    for (int d = 1; d < 2 * blockDim.x; d *= 2) {
-        offset >>= 1;
+    // Up-sweep
+    for (int offset = BLOCK_SIZE >> 1; offset > 0; offset >>= 1) {
         __syncthreads();
-        if (threadId < d) {
-            int ai = offset * (2 * threadId + 1) - 1;
-            int bi = offset * (2 * threadId + 2) - 1;
-            int t = temp[ai];
-            temp[ai] = temp[bi];
-            temp[bi] += t;
+        int index = (threadId + 1) * offset * 2 - 1;
+        if (index < 2 * BLOCK_SIZE) {
+            int t = temp[index];
+            temp[index] += temp[index - offset];
+            temp[index - offset] = t;
         }
     }
     __syncthreads();
 
-    // Write results to output
-    if (idx < n) {
-        output[idx] = temp[2 * threadId];
+    // Write results to device memory
+    if (2 * globalId < length) {
+        output[2 * globalId] = temp[2 * threadId];
     }
-    if (idxNext < n) {
-        output[idxNext] = temp[2 * threadId + 1];
+    if (2 * globalId + 1 < length) {
+        output[2 * globalId + 1] = temp[2 * threadId + 1];
     }
 
-    // Write the block's sum to blockSums
-    if (threadId == 0) {
-        blockSums[blockId] = temp[2 * blockDim.x - 2] + ((blockId * 2 * blockDim.x + 2 * blockDim.x - 1) < n ? input[blockId * 2 * blockDim.x + 2 * blockDim.x - 1] : 0);
+    // Store block sum
+    if (blockSums != nullptr && threadId == 0) {
+        blockSums[blockIdx.x] = temp[2 * BLOCK_SIZE - 1] + 
+                               ((2 * (blockIdx.x * blockDim.x + blockDim.x) - 1 < length) ? input[2 * (blockIdx.x * blockDim.x + blockDim.x) - 1] : 0);
     }
 }
 
-__global__ void add_block_sums(int* input, int* blockSums, int n) {
-    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void add_block_sums(int* output, int* blockSums, int length) {
+    int globalId = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (globalId < n) {
-        input[globalId] += blockSums[blockIdx.x];
+    if (globalId < length && blockIdx.x > 0) {
+        output[globalId] += blockSums[blockIdx.x - 1];
     }
 }
 
@@ -112,18 +102,6 @@ __global__ void extract_unique_values(int* histogram, int* prefixSum, int* data,
             unique_values[prefixSum[index] - 1] = data[index];
         }
     }
-}
-
-int nextPowerOf2(int n) {
-    int count = 0;
-    if (n && !(n & (n - 1))) {
-        return n;
-    }
-    while(n != 0) {
-        n >>= 1;
-        count += 1;
-    }
-    return 1 << count;
 }
 
 UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) {
@@ -179,14 +157,16 @@ std::vector<int> UniqueFinder::find_unique() {
     int numBlocks = (nunique + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
     int* d_blockSums;
     cudaMalloc(&d_blockSums, numBlocks * sizeof(int));
-    recursive_prefix_sum(d_binary, d_prefix_sum, d_blockSums, nunique);
-    cudaFree(d_blockSums);
+
+    // First pass
+    prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_binary, d_prefix_sum, d_blockSums, nunique);
     cudaDeviceSynchronize();
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        printf("CUDA error after launching [add_block_sums]: %s\n", cudaGetErrorString(err));
-    }
+    // Add block sums
+    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_prefix_sum, d_blockSums, nunique);
+    cudaDeviceSynchronize();
+
+    cudaFree(d_blockSums);
 
     // After computing prefix sum
     int* h_prefix_sum_debug = new int[nunique];
@@ -195,9 +175,6 @@ std::vector<int> UniqueFinder::find_unique() {
         std::cout << "PrefixSum[" << i << "]: " << h_prefix_sum_debug[i] << std::endl;
     }
     delete[] h_prefix_sum_debug;
-
-
-
 
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, d_data, d_unique_values, nunique);
