@@ -17,7 +17,7 @@ enum Constants {
 std::vector<int> generate_random_numbers(int n, int unique_values) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(1, unique_values);
+    std::uniform_int_distribution<> dis(0, unique_values - 1);
 
     std::vector<int> numbers;
     for (int i = 0; i < n; ++i) {
