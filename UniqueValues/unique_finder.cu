@@ -144,6 +144,16 @@ std::vector<int> UniqueFinder::find_unique() {
     // Compute prefix sum
     int padded_size = nextPowerOf2(nunique);
     prefix_sum_kernel<<<1, BLOCK_SIZE / 2, padded_size * sizeof(int)>>>(d_histogram, d_prefix_sum, padded_size);
+    // After computing prefix sum
+    int* h_prefix_sum_debug = new int[nunique];
+    cudaMemcpy(h_prefix_sum_debug, d_prefix_sum, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < nunique; i++) {
+        std::cout << "PrefixSum[" << i << "]: " << h_prefix_sum_debug[i] << std::endl;
+    }
+    delete[] h_prefix_sum_debug;
+
+
+
 
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, d_data, d_unique_values, nunique);
