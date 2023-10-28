@@ -67,11 +67,15 @@ template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
     int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    // Reset the count in d_unique_elements_ to 0
+    // Reset the histogram and the count in d_unique_elements_ to 0
+    cudaMemset(d_histogram_, 0, unique_values_ * sizeof(T));
     cudaMemset(d_unique_elements_, 0, sizeof(T));
 
     countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+    cudaDeviceSynchronize();  // Synchronize after countOccurrences
+
     filterUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_histogram_, d_unique_values_, d_unique_elements_, unique_values_);
+    cudaDeviceSynchronize();  // Synchronize after filterUniqueValues
 
     int unique_count;
     cudaMemcpy(&unique_count, d_unique_elements_, sizeof(T), cudaMemcpyDeviceToHost);
