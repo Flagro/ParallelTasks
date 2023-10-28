@@ -13,17 +13,36 @@ enum Constants {
     N = 1000,       // Number of random integers
     T = 3,          // Number of trials
     UNIQUE_VALUES = 700,  // limiting to 1000 unique values
+    OCCUR_ONCE_CNT = 100 // Number of values that occur only once
 };
 
-std::vector<int> generate_random_numbers(int n, int unique_values) {
+std::vector<int> generate_random_numbers(int n, int unique_values, int occur_once_cnt) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, unique_values - 1);
 
-    std::vector<int> numbers;
-    for (int i = 0; i < n; ++i) {
-        numbers.push_back(dis(gen));
+    std::set<int> occur_once;
+    while (occur_once.size() < occur_once_cnt) {
+        occur_once.insert(dis(gen));
     }
+
+    std::vector<int> numbers;
+    for (int i = 0; i < n - occur_once_cnt; ++i) {
+        int new_number = dis(gen);
+        while (occur_once.find(new_number) != occur_once.end()) {
+            new_number = dis(gen);
+        }
+        numbers.push_back(new_number);
+    }
+
+    for (auto val : occur_once) {
+        numbers.push_back(val);
+    }
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    std::shuffle(numbers.begin(), numbers.end(), g);
 
     return numbers;
 }
@@ -99,7 +118,7 @@ int main() {
 
     std::cout << "Started running..." << std::endl;
     for (int trial = 0; trial < T; ++trial) {
-        std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
+        std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES, OCCUR_ONCE_CNT);
 
         UniqueFinder finder;
 

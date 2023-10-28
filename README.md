@@ -23,6 +23,8 @@ This repository contains the implementation of tasks i got as homework for a job
 
 ## Comments on Task2:
 - Since CUDA is the only GPU parallel programming kit i'm familiar with and i'm driving Apple Silicon chip the testing were done on Jupyter Notebook on free GPU resources in Kaggle.
+- The implementantion uses a cool trick called parallel prefix sum for a fast identification of indexes of unique integers in the output. Even though it's not the fastest implementation it still apllies a restriction on a UNIQUE_VALUES (it should be less than BLOCK_SIZE which is 1024) just for simplicity and demonstration of concept. It could be fixed with recursive calls.
+- 
 
 ## Ways to improve:
 - The implementations obviously could use some documentation.
