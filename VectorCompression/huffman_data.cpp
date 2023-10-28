@@ -21,7 +21,7 @@ HuffmanData<T>::HuffmanData(const std::vector<T>& input_array, size_t max_value)
 }
 
 template <typename T>
-void HuffmanData<T>::buildHuffmanTree(size_t max_value) {
+int HuffmanData<T>::buildHuffmanTree(size_t max_value) {
     std::priority_queue<int, std::vector<int>, Compare> min_heap{Compare(freq_array_)};
 
     for (int i = 0; i <= max_value; i++) {

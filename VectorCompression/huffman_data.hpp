@@ -13,7 +13,7 @@ public:
     size_t get_size() const override;
 
 private:
-    void buildHuffmanTree(size_t max_value);
+    int buildHuffmanTree(size_t max_value);
     void generateCodes(int index, const std::vector<bool>& currentCode);
     std::vector<bool> compress(const std::vector<T>& input);
     std::vector<T> decompress(const std::vector<bool>& compressed) const;
