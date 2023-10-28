@@ -9,9 +9,9 @@
 #include "unique_finder.cuh"
 
 enum Constants {
-    N = 10000000,       // Number of random integers
+    N = 100,       // Number of random integers
     T = 10,          // Number of trials
-    UNIQUE_VALUES = 1000,  // limiting to 1000 unique values
+    UNIQUE_VALUES = 10,  // limiting to 1000 unique values
 };
 
 std::vector<int> generate_random_numbers(int n, int unique_values) {
@@ -67,6 +67,16 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
             true_unique_values.push_back(key);
         }
     }
+    std::cout << "True unique values: ";
+    for (auto val : true_unique_values) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl << "Found unique values: ";
+    for (auto val : found_unique_elements) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+
     if (true_unique_values.size() != found_unique_elements.size()) {
         return false;
     }

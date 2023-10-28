@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-enum { BLOCK_SIZE = 1024 };
+enum { BLOCK_SIZE = 32 };
 
 template <typename T>
 __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
