@@ -60,6 +60,7 @@ UniqueFinder<T>::~UniqueFinder() {
     cudaFree(d_histogram_);
 }
 
+/*
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
     int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -80,6 +81,24 @@ std::vector<T> UniqueFinder<T>::findUnique() {
     cudaMemcpy(unique_elements.data(), d_unique_elements + 1, unique_count * sizeof(T), cudaMemcpyDeviceToHost);
 
     cudaFree(d_unique_elements);
+
+    return unique_elements;
+}
+*/
+
+template <typename T>
+std::vector<T> UniqueFinder<T>::findUnique() {
+    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+
+    cudaMemcpy(histogram_.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
+
+    std::vector<T> unique_elements;
+    for (int i = 0; i < unique_values_; i++) {
+        if (histogram_[i] == 1) {
+            unique_elements.push_back(static_cast<T>(i));
+        }
+    }
 
     return unique_elements;
 }
