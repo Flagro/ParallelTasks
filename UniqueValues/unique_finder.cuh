@@ -12,6 +12,7 @@ public:
     std::vector<T> findUnique();
 private:
     T* d_data_;
+    size_t data_size_;
     T* d_unique_values_;
     T* d_histogram_;
     T* d_output_count_;

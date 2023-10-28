@@ -32,7 +32,7 @@ __global__ void extractUniqueValues(T *unique_vals, T *histogram, T *output, int
 }
 
 template <typename T>
-UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique): unique_values_(nunique) {
+UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique): unique_values_(nunique), data_size_(data.size()) {
     // Memory allocations and data copying
     cudaMalloc(&d_data_, data.size() * sizeof(T));
     cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));
@@ -61,9 +61,9 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (data.size() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    int blocksPerGrid = (data_size_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, data.size(), unique_values_);
+    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, data_size_, unique_values_);
 
     // Debug: Check histogram
     std::vector<T> debug_histogram(unique_values_);
