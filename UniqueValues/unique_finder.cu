@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 
 // Define block size
-enum { BLOCK_SIZE = 256 };
+enum { BLOCK_SIZE = 32 };
 
 // Kernel to compute the histogram
 template <typename T>
@@ -43,17 +43,17 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique) : nuni
     cudaMalloc((void**)&d_histogram, nunique_ * sizeof(T));
 
     // Copy data to device
-    cudaMemcpy(d_data, data.data(), data_size_ * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)d_data, data.data(), data_size_ * sizeof(T), cudaMemcpyHostToDevice);
 
     // Initialize histogram to zeros
-    cudaMemset(d_histogram, 0, nunique_ * sizeof(T));
+    cudaMemset((void*)d_histogram, 0, nunique_ * sizeof(T));
 }
 
 template <typename T>
 UniqueFinder<T>::~UniqueFinder() {
     // Free device memory
-    cudaFree(d_data);
-    cudaFree(d_histogram);
+    cudaFree((void*)d_data);
+    cudaFree((void*)d_histogram);
 }
 
 template <typename T>
