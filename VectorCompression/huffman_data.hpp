@@ -2,20 +2,34 @@
 
 #include "data_format.hpp"
 #include <vector>
+#include <functional>
 
 template <typename T>
 class HuffmanData : public DataFormat<T> {
 public:
-    explicit HuffmanData(std::vector<T>&& dense_array, size_t original_size);
-
+    explicit HuffmanData(std::vector<T>&& input_array, size_t max_value);
+    
     std::vector<T> get_data() const override;
     size_t get_size() const override;
 
 private:
-    std::vector<T> dense_array_;
-    size_t original_size_;
+    void buildHuffmanTree(size_t max_value);
+    void generateCodes(int index, const std::vector<bool>& currentCode);
+    std::vector<bool> compress(const std::vector<T>& input);
+    std::vector<T> decompress(const std::vector<bool>& compressed) const;
+
+    std::vector<T> data_array_;
+    std::vector<unsigned> freq_array_;
+    std::vector<std::vector<bool>> codes_;
+    std::vector<bool> compressed_data_;
+
+    struct Compare {
+        bool operator()(int l, int r) const {
+            return freq_array_[l] > freq_array_[r];
+        }
+    };
 };
 
 // Explicit template instantiation for common types
-template class HuffmanData<int>;
-template class HuffmanData<long long>;
+extern template class HuffmanData<int>;
+extern template class HuffmanData<long long>;
