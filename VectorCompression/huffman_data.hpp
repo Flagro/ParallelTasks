@@ -31,5 +31,5 @@ private:
 };
 
 // Explicit template instantiation for common types
-extern template class HuffmanData<int>;
-extern template class HuffmanData<long long>;
+template class HuffmanData<int>;
+template class HuffmanData<long long>;
