@@ -110,7 +110,7 @@ int main() {
         std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
 
         std::cout << "Generated numbers: ";
-        for (auto val : numbers) {
+        for (auto val : data) {
             std::cout << val << " ";
         }
         std::cout << std::endl;
