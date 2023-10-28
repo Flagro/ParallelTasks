@@ -38,60 +38,27 @@ __global__ void histogram_to_binary(int* histogram, int* binary, int nunique) {
     }
 }
 
-__global__ void prefix_sum_first_pass(int* input, int* output, int* blockSums, int length) {
+__global__ void simple_prefix_sum(int* input, int* output, int n) {
     extern __shared__ int temp[];
+
     int threadId = threadIdx.x;
-    int globalId = blockIdx.x * blockDim.x + threadId;
 
     // Load input into shared memory.
-    temp[2 * threadId] = (2 * globalId < length) ? input[2 * globalId] : 0;
-    temp[2 * threadId + 1] = (2 * globalId + 1 < length) ? input[2 * globalId + 1] : 0;
+    temp[threadId] = (threadId < n) ? input[threadId] : 0;
     __syncthreads();
 
-    // Down-sweep
-    for (int offset = 1; offset <= BLOCK_SIZE; offset <<= 1) {
-        int index = (threadId + 1) * offset * 2 - 1;
-        if (index < 2 * BLOCK_SIZE) {
-            temp[index] += temp[index - offset];
+    for (int stride = 1; stride < n; stride *= 2) {
+        int value = 0;
+        if (threadId >= stride) {
+            value = temp[threadId - stride];
         }
+        __syncthreads();
+        temp[threadId] += value;
         __syncthreads();
     }
 
-    // Clear the last element
-    if (threadId == 0) temp[2 * BLOCK_SIZE - 1] = 0;
-
-    // Up-sweep
-    for (int offset = BLOCK_SIZE >> 1; offset > 0; offset >>= 1) {
-        __syncthreads();
-        int index = (threadId + 1) * offset * 2 - 1;
-        if (index < 2 * BLOCK_SIZE) {
-            int t = temp[index];
-            temp[index] += temp[index - offset];
-            temp[index - offset] = t;
-        }
-    }
-    __syncthreads();
-
-    // Write results to device memory
-    if (2 * globalId < length) {
-        output[2 * globalId] = temp[2 * threadId];
-    }
-    if (2 * globalId + 1 < length) {
-        output[2 * globalId + 1] = temp[2 * threadId + 1];
-    }
-
-    // Store block sum
-    if (blockSums != nullptr && threadId == 0) {
-        blockSums[blockIdx.x] = temp[2 * BLOCK_SIZE - 1] + 
-                               ((2 * (blockIdx.x * blockDim.x + blockDim.x) - 1 < length) ? input[2 * (blockIdx.x * blockDim.x + blockDim.x) - 1] : 0);
-    }
-}
-
-__global__ void add_block_sums(int* output, int* blockSums, int length) {
-    int globalId = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (globalId < length && blockIdx.x > 0) {
-        output[globalId] += blockSums[blockIdx.x - 1];
+    if (threadId < n) {
+        output[threadId] = temp[threadId];
     }
 }
 
@@ -110,21 +77,6 @@ UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) {
 }
 
 UniqueFinder::~UniqueFinder() {
-}
-
-void recursive_prefix_sum(int* d_input, int* d_output, int* d_blockSums, int length) {
-    int numBlocks = (length + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
-    if (numBlocks > 1) {
-        // If numBlocks is greater than BLOCK_SIZE, then we need another layer of block sums
-        int* d_nextBlockSums;
-        cudaMalloc(&d_nextBlockSums, numBlocks * sizeof(int));
-        recursive_prefix_sum(d_blockSums, d_blockSums, d_nextBlockSums, numBlocks);
-        cudaFree(d_nextBlockSums);
-    }
-    prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_input, d_output, d_blockSums, length);
-    cudaDeviceSynchronize();
-    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_output, d_blockSums, length);
-    cudaDeviceSynchronize();
 }
 
 std::vector<int> UniqueFinder::find_unique() {
@@ -152,23 +104,10 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_prefix_sum, *d_unique_values;
     cudaMalloc(&d_prefix_sum, nunique * sizeof(int));
     cudaMalloc(&d_unique_values, nunique * sizeof(int));
-    
-    cudaDeviceSynchronize();
 
     // Compute prefix sum
-    int numBlocks = (nunique + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
-    int* d_blockSums;
-    cudaMalloc(&d_blockSums, numBlocks * sizeof(int));
-
-    // First pass
-    prefix_sum_first_pass<<<numBlocks, BLOCK_SIZE, BLOCK_SIZE * 2 * sizeof(int)>>>(d_binary, d_prefix_sum, d_blockSums, nunique);
-    cudaDeviceSynchronize();
-
-    // Add block sums
-    add_block_sums<<<numBlocks, BLOCK_SIZE>>>(d_prefix_sum, d_blockSums, nunique);
-    cudaDeviceSynchronize();
-
-    cudaFree(d_blockSums);
+    int blockSize = min(nunique, BLOCK_SIZE);
+    simple_prefix_sum<<<1, blockSize, blockSize * sizeof(int)>>>(d_binary, d_prefix_sum, nunique);
 
     // After computing prefix sum
     int* h_prefix_sum_debug = new int[nunique];
