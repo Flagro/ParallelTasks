@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "unique_finder.cuh"
 #include <cuda_runtime.h>
 
