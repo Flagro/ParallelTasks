@@ -137,26 +137,15 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMalloc(&d_unique_values, nunique * sizeof(int));  // Overallocate, as we'll have fewer unique values
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, d_data, d_unique_values, nunique);
 
-    /*
-    int* h_histogram = new int[nunique];
-    cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    // 1. Get the number of unique values
+    int num_unique;
+    cudaMemcpy(&num_unique, &d_binary[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
 
-    std::vector<int> unique_elements;
-    for (int i = 0; i < nunique; i++) {
-        if (h_histogram[i] == 1) {
-            unique_elements.push_back(i);
-        }
-    }
+    // 2. Allocate space for these unique values on the host
+    std::vector<int> unique_elements(num_unique);
 
-    */
-
-    // Extract valid unique values
-    std::vector<int> unique_elements;
-    for (int i = 0; i < nunique; i++) {
-        if (h_unique_values[i] != 0) {
-            unique_elements.push_back(h_unique_values[i]);
-        }
-    }
+    // 3. Copy the unique values from the device to the host memory
+    cudaMemcpy(unique_elements.data(), d_unique_values, num_unique * sizeof(int), cudaMemcpyDeviceToHost);
 
     // Clean up
     cudaFree(d_data);
@@ -164,8 +153,8 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaFree(d_prefix_sum);
     cudaFree(d_binary);
     cudaFree(d_unique_values);
-    delete[] h_histogram;
-    delete[] h_unique_values;
+    // delete[] h_histogram;
+    // delete[] h_unique_values;
 
     return unique_elements;
 }
