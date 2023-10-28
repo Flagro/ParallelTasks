@@ -7,7 +7,7 @@
 template <typename T>
 class HuffmanData : public DataFormat<T> {
 public:
-    explicit HuffmanData(std::vector<T>&& input_array, size_t max_value);
+    explicit HuffmanData(const std::vector<T>& input_array, size_t max_value);
     
     std::vector<T> get_data() const override;
     size_t get_size() const override;

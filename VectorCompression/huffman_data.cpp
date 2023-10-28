@@ -3,7 +3,7 @@
 #include <omp.h>
 
 template <typename T>
-HuffmanData<T>::HuffmanData(std::vector<T>&& input_array, size_t max_value) {
+HuffmanData<T>::HuffmanData(const std::vector<T>& input_array, size_t max_value) {
     data_array_.resize(max_value + 1, -1);
     freq_array_.resize(max_value + 1, 0);
     codes_.resize(max_value + 1);

@@ -23,7 +23,7 @@ endif()
 add_executable(CompressedDataApp
     main.cpp
     compressed_data.cpp
-    dense_data.cpp
+    huffman_data.cpp
 )
 
 # Link the OpenMP libraries
