@@ -10,6 +10,7 @@ __global__ void count_occurrences_kernel(T* data, int* histogram, size_t n, size
         return;
     }
     if (index < n) {
+        printf("Invalid data value at index %d: %d\n", index, data[index]);
         atomicAdd(&histogram[data[index]], 1);
     }
 }
