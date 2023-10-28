@@ -71,14 +71,29 @@ std::vector<T> UniqueFinder<T>::findUnique() {
 
     countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
 
+    // Debug: Check histogram
+    std::vector<T> debug_histogram(unique_values_);
+    cudaMemcpy(debug_histogram.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
+    std::cout << "Histogram: ";
+    for (int i = 0; i < unique_values_; i++) {
+        std::cout << debug_histogram[i] << " ";
+    }
+    std::cout << std::endl;
+
     int h_output_count = 0;
     cudaMemcpy(d_output_count_, &h_output_count, sizeof(int), cudaMemcpyHostToDevice);
     
     extractUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_unique_values_, d_histogram_, d_data_, d_output_count_, unique_values_);
 
+    // Debug: Check unique values and count
     cudaMemcpy(&h_output_count, d_output_count_, sizeof(int), cudaMemcpyDeviceToHost);
-    std::vector<T> unique_elements(h_output_count);
-    cudaMemcpy(unique_elements.data(), d_data_, h_output_count * sizeof(T), cudaMemcpyDeviceToHost);
+    std::vector<T> debug_output(h_output_count);
+    cudaMemcpy(debug_output.data(), d_data_, h_output_count * sizeof(T), cudaMemcpyDeviceToHost);
+    std::cout << "Unique Values (" << h_output_count << "): ";
+    for (int i = 0; i < h_output_count; i++) {
+        std::cout << debug_output[i] << " ";
+    }
+    std::cout << std::endl;
 
-    return unique_elements;
+    return debug_output;
 }
