@@ -133,8 +133,6 @@ std::vector<int> UniqueFinder::find_unique() {
     prefix_sum_kernel<<<1, BLOCK_SIZE / 2, nunique * sizeof(int)>>>(d_histogram, d_prefix_sum, nunique);
 
     // Extract unique values based on the prefix sum
-    int* d_unique_values;
-    cudaMalloc(&d_unique_values, nunique * sizeof(int));  // Overallocate, as we'll have fewer unique values
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, d_data, d_unique_values, nunique);
 
     // 1. Get the number of unique values
