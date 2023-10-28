@@ -35,7 +35,7 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique)
     int* d_test;
     cudaError_t err = cudaMalloc(&d_test, 10 * sizeof(int));
     if (err != cudaSuccess) {
-        std::cerr << "Error during test cudaMalloc: " << cudaGetErrorString(err) << std::endl;
+        std::cout << "Error during test cudaMalloc: " << cudaGetErrorString(err) << std::endl;
     } else {
         cudaFree(d_test);
     }
@@ -44,7 +44,7 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique)
 
     // Allocate device memory for data, histogram, and unique values
     cudaMalloc(&d_data, data_size * sizeof(T));
-    cudaError_t err = cudaGetLastError();
+    err = cudaGetLastError();
     if (err != cudaSuccess) 
         printf("Error: %s\n", cudaGetErrorString(err));
     cudaMalloc(&d_histogram, nunique * sizeof(int));
