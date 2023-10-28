@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 100000 };
+enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 128000 };
 
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
@@ -71,13 +71,7 @@ __global__ void extract_unique_values(int* histogram, int* prefixSum, int* uniqu
     }
 }
 
-UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) {
-    this->data = data;
-    this->unique_values = nunique;
-}
-
-UniqueFinder::~UniqueFinder() {
-}
+UniqueFinder::UniqueFinder(const std::vector<int>& data, int nunique) : data(data), unique_values(nunique) {}
 
 std::vector<int> UniqueFinder::find_unique() {
     int n = this->data.size();
@@ -87,18 +81,18 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_histogram;
     
     cudaMalloc(&d_data, n * sizeof(int));
+    cudaDeviceSynchronize();
     cudaMalloc(&d_histogram, nunique * sizeof(int));
+    cudaDeviceSynchronize();
     cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    cudaDeviceSynchronize();
 
     // Obtain the histogram of the data
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
     count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
-
-    // Convert histogram to binary format
-    int* d_binary;
-    cudaMalloc(&d_binary, nunique * sizeof(int));
-    histogram_to_binary<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, nunique);
+    cudaDeviceSynchronize();
     // After generating the histogram
     int* h_histogram_debug = new int[nunique];
     cudaMemcpy(h_histogram_debug, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
@@ -106,7 +100,11 @@ std::vector<int> UniqueFinder::find_unique() {
         std::cout << "Hist[" << i << "]: " << h_histogram_debug[i] << std::endl;
     }
     delete[] h_histogram_debug;
-
+    
+    // Convert histogram to binary format
+    int* d_binary;
+    cudaMalloc(&d_binary, nunique * sizeof(int));
+    histogram_to_binary<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, nunique);
 
     // After converting to binary
     int* h_binary_debug = new int[nunique];
