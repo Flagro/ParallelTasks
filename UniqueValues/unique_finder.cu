@@ -47,4 +47,6 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaFree(d_data);
     cudaFree(d_histogram);
     delete[] h_histogram;
+
+    return unique_elements;
 }
