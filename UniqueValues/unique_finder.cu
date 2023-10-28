@@ -118,6 +118,7 @@ std::vector<int> UniqueFinder::find_unique() {
 
     // 2. Allocate space for these unique values on the host
     std::vector<int> unique_elements(num_unique);
+    std::cout << num_unique << std::endl;
 
     // 3. Copy the unique values from the device to the host memory
     cudaMemcpy(unique_elements.data(), d_unique_values, num_unique * sizeof(int), cudaMemcpyDeviceToHost);
