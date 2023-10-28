@@ -105,7 +105,7 @@ int main() {
 
         std::vector<int> unique_elements;
 
-        get_unique_times.push_back(time_function([&]() { unique_elements = finder.findUnique(); }));
+        get_unique_times.push_back(time_function([&]() { unique_elements = finder.find_unique(); }));
 
         bool is_correct = check_correctness(numbers, unique_elements);
 
