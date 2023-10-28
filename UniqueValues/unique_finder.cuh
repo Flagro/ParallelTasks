@@ -16,8 +16,6 @@ private:
     int* d_histogram = nullptr;
     size_t data_size = 0;
     size_t nunique = 0;
-
-    __global__ void count_occurrences_kernel(T* data, int* histogram, size_t n);
 };
 
 // Explicit template instantiation for common types
