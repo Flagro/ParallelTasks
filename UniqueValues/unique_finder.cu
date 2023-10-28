@@ -78,11 +78,22 @@ std::vector<T> UniqueFinder<T>::find_unique() {
 
     // Launch kernel to count occurrences
     count_occurrences_kernel<<<num_blocks, BLOCK_SIZE>>>(d_data, data_size, d_histogram, nunique, d_unique_values);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaDeviceSynchronize();
-
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     // Launch kernel to find unique numbers
     find_unique_kernel<<<num_blocks, BLOCK_SIZE>>>(d_histogram, nunique, d_unique_values, d_unique_counter);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaDeviceSynchronize();
+    err = cudaGetLastError();
+    if (err != cudaSuccess) 
+        printf("Error: %s\n", cudaGetErrorString(err));
 
     // Copy unique values to host
     int unique_count;
