@@ -75,6 +75,3 @@ std::vector<T> UniqueFinder<T>::find_unique() {
 
     return unique_values;
 }
-
-// Explicit template instantiation for common types
-template class UniqueFinder<int>;
