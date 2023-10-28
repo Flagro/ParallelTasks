@@ -79,13 +79,20 @@ std::vector<int> UniqueFinder::find_unique() {
 
     int* d_data;
     int* d_histogram;
-    
-    cudaMalloc(&d_data, n * sizeof(int));
+    cudaError_t err;
+
+    err = cudaMalloc(&d_data, n * sizeof(int));
     cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::cerr << "Failed to allocate device memory: " << cudaGetErrorString(err) << std::endl;
+    }
     cudaMalloc(&d_histogram, nunique * sizeof(int));
     cudaDeviceSynchronize();
-    cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::cerr << "Failed to copy to a device memory: " << cudaGetErrorString(err) << std::endl;
+    }
     cudaMemset(d_histogram, 0, nunique * sizeof(int));
     cudaDeviceSynchronize();
 
@@ -100,7 +107,7 @@ std::vector<int> UniqueFinder::find_unique() {
         std::cout << "Hist[" << i << "]: " << h_histogram_debug[i] << std::endl;
     }
     delete[] h_histogram_debug;
-    
+
     // Convert histogram to binary format
     int* d_binary;
     cudaMalloc(&d_binary, nunique * sizeof(int));
