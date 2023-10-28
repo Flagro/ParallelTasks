@@ -39,27 +39,25 @@ __global__ void histogram_to_binary(int* histogram, int* binary, int nunique) {
 }
 
 __global__ void prefix_sum_kernel(int* input, int* output, int n) {
-    extern __shared__ int temp[];  // allocated on invocation
+    extern __shared__ int temp[];
 
     int threadId = threadIdx.x;
-    int pout = 0, pin = 1;
 
-    // Load input into shared memory.
-    // This is exclusive scan, so shift right by one and set first element to 0
-    temp[pout*n + threadId] = (threadId > 0) ? input[threadId-1] : 0;
+    // Load input into shared memory
+    temp[threadId] = (threadId < n) ? input[threadId] : 0;
     __syncthreads();
 
     for(int offset = 1; offset < n; offset *= 2) {
-        pout = 1 - pout;  // double buffer
-        pin = 1 - pout;
         if (threadId >= offset) {
-            temp[pout*n+threadId] += temp[pin*n+threadId - offset];
+            int t = temp[threadId - offset];
+            __syncthreads();
+            temp[threadId] += t;
+            __syncthreads();
         } else {
-            temp[pout*n+threadId] = temp[pin*n+threadId];
+            __syncthreads();
         }
-        __syncthreads();
     }
-    output[threadId] = temp[pout*n+threadId];  // write output
+    output[threadId] = temp[threadId];  // write output
 }
 
 __global__ void extract_unique_values(int* histogram, int* prefixSum, int* data, int* unique_values, int nunique) {
@@ -118,9 +116,8 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaMalloc(&d_unique_values, nunique * sizeof(int));
 
     // Compute prefix sum
-    int padded_size = nextPowerOf2(nunique);
-    int shared_mem_size = 2 * padded_size * sizeof(int);
-    prefix_sum_kernel<<<1, padded_size, shared_mem_size>>>(d_histogram, d_prefix_sum, padded_size);
+    int shared_mem_size = nunique * sizeof(int);
+    prefix_sum_kernel<<<1, BLOCK_SIZE, shared_mem_size>>>(d_histogram, d_prefix_sum, nunique);
     // After computing prefix sum
     int* h_prefix_sum_debug = new int[nunique];
     cudaMemcpy(h_prefix_sum_debug, d_prefix_sum, nunique * sizeof(int), cudaMemcpyDeviceToHost);
