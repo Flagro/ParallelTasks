@@ -37,6 +37,7 @@ std::vector<T> UniqueFinder<T>::find_unique() {
 
     std::vector<T> unique_values;
     for (size_t i = 0; i < nunique; i++) {
+        std::cout << i << ": " << h_histogram[i] << std::endl;
         if (h_histogram[i] == 1) {
             unique_values.push_back(static_cast<T>(i));
         }
