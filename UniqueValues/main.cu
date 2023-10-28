@@ -98,35 +98,99 @@ __global__ void count_occurrences_kernel(int* data, int* histogram, int n) {
 }
 
 int main() {
-    std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
-    int n = data.size();
-    int nunique = UNIQUE_VALUES;
+    //std::ofstream json_file("results.json");
+    //std::string json_results = "[\n";
 
-    int* d_data;
-    int* d_histogram;
-    
-    cudaMalloc(&d_data, n * sizeof(int));
-    cudaMalloc(&d_histogram, nunique * sizeof(int));
-    cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemset(d_histogram, 0, nunique * sizeof(int));
+    std::vector<double> allocation_times, get_unique_times, get_intimes;
+    std::vector<int> sizes;
+    bool correctness = true;
 
-    int threadsPerBlock = 256;
-    int blocks = (n + threadsPerBlock - 1) / threadsPerBlock;
-    count_occurrences_kernel<<<blocks, threadsPerBlock>>>(d_data, d_histogram, n);
+    std::cout << "Started running..." << std::endl;
+    for (int trial = 0; trial < T; ++trial) {
+        std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
 
-    int* h_histogram = new int[nunique];
-    cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+        std::cout << "Generated numbers: ";
+        for (auto val : numbers) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
 
-    for (int i = 0; i < nunique; i++) {
-        std::cout << i << " " << h_histogram[i] << std::endl;
-        //if (h_histogram[i] == 1) {
-        //    std::cout << i << " ";
-        //}
+        int n = data.size();
+        int nunique = UNIQUE_VALUES;
+
+        int* d_data;
+        int* d_histogram;
+        
+        cudaMalloc(&d_data, n * sizeof(int));
+        cudaMalloc(&d_histogram, nunique * sizeof(int));
+        cudaMemcpy(d_data, data.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemset(d_histogram, 0, nunique * sizeof(int));
+
+        int threadsPerBlock = 256;
+        int blocks = (n + threadsPerBlock - 1) / threadsPerBlock;
+        count_occurrences_kernel<<<blocks, threadsPerBlock>>>(d_data, d_histogram, n);
+
+        int* h_histogram = new int[nunique];
+        cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+
+        std::vector<int> unique_elements;
+        for (int i = 0; i < nunique; i++) {
+            if (h_histogram[i] == 1) {
+                unique_elements.push_back(i);
+                std::cout << i << " ";
+            }
+        }
+
+        cudaFree(d_data);
+        cudaFree(d_histogram);
+        delete[] h_histogram;
+        
+        /*
+        UniqueFinder<int> finder;
+
+        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(numbers, UNIQUE_VALUES); }));
+
+        std::vector<int> unique_elements;
+
+        get_unique_times.push_back(time_function([&]() { unique_elements = finder.find_unique(); }));
+        */
+
+        bool is_correct = check_correctness(data, unique_elements);
+
+        if (!is_correct) {
+            correctness = false;
+            std::cout << "Incorrect result!" << std::endl;
+        }
+
+        /*
+        // JSON output
+        std::vector<std::pair<std::string, std::string>> run_results;
+        run_results.emplace_back("data_size", std::to_string(N));
+        run_results.emplace_back("data_nunique", std::to_string(UNIQUE_VALUES));
+        run_results.emplace_back("allocation_time", std::to_string(allocation_times.back()));
+        run_results.emplace_back("get_unique_time", std::to_string(get_unique_times.back()));
+        run_results.emplace_back("correct", std::to_string(is_correct));
+
+        json_results += toJsonString(run_results) + ",\n";
+        */
     }
 
-    cudaFree(d_data);
-    cudaFree(d_histogram);
-    delete[] h_histogram;
+    // Print the results to stdout
+    std::cout << "Median Allocation Time: " << get_median(allocation_times) << " ms" << std::endl;
+    std::cout << "Median GetUnique Time: " << get_median(get_unique_times) << " ms" << std::endl;
+    std::cout << "Data Length: " << N << std::endl;
+    std::cout << "Data UniqueCount: " << UNIQUE_VALUES << std::endl;
+    std::cout << "Correctness: " << correctness << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
 
+    /*
+    json_results.pop_back(); // Remove the last comma
+    json_results.pop_back(); 
+    json_results += "\n]";
+
+    json_file << json_results;
+    json_file.close();
+    */
     return 0;
 }
+
