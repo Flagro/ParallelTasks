@@ -4,6 +4,7 @@
 
 enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 128000 };
 
+/*
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
 
@@ -28,6 +29,19 @@ __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n
     // Update global histogram from local histograms
     for (int i = threadId; i < nunique; i += blockDim.x) {
         atomicAdd(&global_histogram[i], local_histogram[i]);
+    }
+}
+*/
+
+__global__ void count_occurrences_kernel(int* data, int* histogram, int n, int nunique, int chunk_size) {
+    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // Each thread processes a chunk of data and updates the histogram directly
+    for (int i = 0; i < chunk_size; i++) {
+        int dataIdx = globalId * chunk_size + i;
+        if (dataIdx < n) {
+            atomicAdd(&histogram[data[dataIdx]], 1);
+        }
     }
 }
 
