@@ -83,20 +83,16 @@ int main() {
 
     std::cout << "Started running..." << std::endl;
     for (int trial = 0; trial < T; ++trial) {
-        std::cout << "Started generation of input data..." << std::endl;
         std::vector<int> numbers = generate_random_numbers(N, UNIQUE_VALUES);
 
         UniqueFinder<int> finder;
 
-        std::cout << "Started cuda memory allocation..." << std::endl;
         allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(std::move(numbers), UNIQUE_VALUES); }));
 
         std::vector<int> unique_elements;
 
-        std::cout << "Started finding unique elements..." << std::endl;
         get_unique_times.push_back(time_function([&]() { unique_elements = finder.findUnique(); }));
 
-        std::cout << "Started correctness check..." << std::endl;
         bool is_correct = check_correctness(numbers, unique_elements);
 
         if (!is_correct) {
