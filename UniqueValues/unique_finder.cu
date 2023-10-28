@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 65536 };
+enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 4096 };
 
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
@@ -122,8 +122,8 @@ std::vector<int> UniqueFinder::find_unique() {
 
     // Obtain the histogram of the data
     int blocks_count = (n + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    // count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
-    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
+    count_occurrences_kernel<<<blocks_count, BLOCK_SIZE, nunique * sizeof(int)>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
+    // count_occurrences_kernel<<<blocks_count, BLOCK_SIZE>>>(d_data, d_histogram, n, nunique, CHUNK_SIZE);
     cudaDeviceSynchronize();
     err = cudaGetLastError();
     if (err != cudaSuccess) {
