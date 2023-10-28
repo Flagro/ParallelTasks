@@ -29,7 +29,7 @@ CompressedData<T>::CompressedData(const std::vector<T>& input, T max_value) {
     }
 
     double entropy = 0.0;
-    double data_size = static_cast<double>(data.size());
+    double data_size = static_cast<double>(input.size());
 
     #pragma omp parallel for reduction(-:entropy)
     for (size_t i = 0; i < frequency.size(); i++) {
