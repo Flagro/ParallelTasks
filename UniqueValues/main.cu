@@ -8,7 +8,7 @@
 #include <set>
 #include <unordered_map>
 #include <cuda_runtime.h>
-//#include "unique_finder.cuh"
+#include "unique_finder.cuh"
 
 enum Constants {
     N = 1000,       // Number of random integers
@@ -110,7 +110,7 @@ int main() {
 
         UniqueFinder<int> finder;
 
-        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(numbers, UNIQUE_VALUES); }));
+        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(data, UNIQUE_VALUES); }));
 
         std::vector<int> unique_elements;
 
