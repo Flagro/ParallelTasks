@@ -101,9 +101,9 @@ int main() {
     for (int trial = 0; trial < T; ++trial) {
         std::vector<int> data = generate_random_numbers(N, UNIQUE_VALUES);
 
-        UniqueFinder<int> finder;
+        UniqueFinder finder;
 
-        allocation_times.push_back(time_function([&]() { finder = UniqueFinder<int>(data, UNIQUE_VALUES); }));
+        allocation_times.push_back(time_function([&]() { finder = UniqueFinder(data, UNIQUE_VALUES); }));
 
         std::vector<int> unique_elements;
 
