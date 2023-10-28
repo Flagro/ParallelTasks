@@ -28,7 +28,7 @@ UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, int nunique) {
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMemcpy: " << cudaGetErrorString(err) << std::endl;
     }
-    err = cudaMemset(d_histogram, 2, nunique * sizeof(int));
+    err = cudaMemset(d_histogram, 0, nunique * sizeof(int));
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMemset: " << cudaGetErrorString(err) << std::endl;
     }
