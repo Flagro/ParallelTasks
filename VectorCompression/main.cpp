@@ -28,7 +28,7 @@ std::vector<int> generate_random_numbers(int n, int max_value) {
 }
 
 double time_function(const std::function<void()>& func) {
-    auto start = omp_get_wtime();
+    auto start = std::chrono::high_resolution_clock::now();
     func();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
