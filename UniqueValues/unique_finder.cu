@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 
 // Define block size
-const int BLOCK_SIZE = 256;
+enum { BLOCK_SIZE = 256 };
 
 // Kernel to compute the histogram
 template <typename T>

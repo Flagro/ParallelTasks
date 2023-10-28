@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <cuda_runtime.h>
 
 template <typename T>
 class UniqueFinder {
