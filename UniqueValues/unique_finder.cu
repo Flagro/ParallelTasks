@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 1024 };
+enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 4096 };
 
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
