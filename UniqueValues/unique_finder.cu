@@ -152,6 +152,8 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_prefix_sum, *d_unique_values;
     cudaMalloc(&d_prefix_sum, nunique * sizeof(int));
     cudaMalloc(&d_unique_values, nunique * sizeof(int));
+    
+    cudaDeviceSynchronize();
 
     // Compute prefix sum
     int numBlocks = (nunique + BLOCK_SIZE * 2 - 1) / (BLOCK_SIZE * 2);
