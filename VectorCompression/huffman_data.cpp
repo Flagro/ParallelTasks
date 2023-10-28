@@ -25,7 +25,7 @@ void HuffmanData<T>::buildHuffmanTree(size_t max_value) {
     std::priority_queue<int, std::vector<int>, Compare> min_heap;
 
     for (int i = 0; i <= max_value; i++) {
-        if (freq[i] > 0) {
+        if (freq_array_[i] > 0) {
             data_array_.push_back(i);
             min_heap.push(data_array_.size() - 1);
         }
@@ -40,7 +40,7 @@ void HuffmanData<T>::buildHuffmanTree(size_t max_value) {
 
         data_array_.push_back(-1);
         freq_array_.push_back(freq_array_[left] + freq_array_[right]);
-        min_heap.push(dataArray.size() - 1);
+        min_heap.push(data_array_.size() - 1);
     }
 
     return min_heap.top();
