@@ -62,11 +62,11 @@ __global__ void simple_prefix_sum(int* input, int* output, int n) {
     }
 }
 
-__global__ void extract_unique_values(int* histogram, int* prefixSum, int* data, int* unique_values, int nunique) {
+__global__ void extract_unique_values(int* histogram, int* prefixSum, int* unique_values, int nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < nunique) {
         if (histogram[index] == 1) {
-            unique_values[prefixSum[index] - 1] = data[index];
+            unique_values[prefixSum[index] - 1] = index;
         }
     }
 }
@@ -109,14 +109,6 @@ std::vector<int> UniqueFinder::find_unique() {
     int blockSize = min(nunique, BLOCK_SIZE);
     simple_prefix_sum<<<1, blockSize, blockSize * sizeof(int)>>>(d_binary, d_prefix_sum, nunique);
 
-    // After computing prefix sum
-    int* h_prefix_sum_debug = new int[nunique];
-    cudaMemcpy(h_prefix_sum_debug, d_prefix_sum, nunique * sizeof(int), cudaMemcpyDeviceToHost);
-    for (int i = 0; i < nunique; i++) {
-        std::cout << "PrefixSum[" << i << "]: " << h_prefix_sum_debug[i] << std::endl;
-    }
-    delete[] h_prefix_sum_debug;
-
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_prefix_sum, d_unique_values, nunique);
 
@@ -136,8 +128,6 @@ std::vector<int> UniqueFinder::find_unique() {
     cudaFree(d_prefix_sum);
     cudaFree(d_binary);
     cudaFree(d_unique_values);
-    // delete[] h_histogram;
-    // delete[] h_unique_values;
 
     return unique_elements;
 }
