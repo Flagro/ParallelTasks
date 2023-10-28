@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-enum { BLOCK_SIZE = 1024, CHUNK_SIZE = 4096 };
+enum { BLOCK_SIZE = 2048, CHUNK_SIZE = 8192 };
 
 __global__ void count_occurrences_kernel(int* data, int* global_histogram, int n, int nunique, int chunk_size) {
     extern __shared__ int local_histogram[];
@@ -115,7 +115,7 @@ std::vector<int> UniqueFinder::find_unique() {
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_prefix_sum, d_unique_values, nunique);
     cudaDeviceSynchronize();
-    
+
     // 1. Get the number of unique values
     int num_unique;
     cudaMemcpy(&num_unique, &d_prefix_sum[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
