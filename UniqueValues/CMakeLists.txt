@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 # Set the project name
 project(UniqueFinder CUDA CXX)
 
+set_property(TARGET UniqueFinder PROPERTY CUDA_ARCHITECTURES 60)
 # Ensure -std=c++17 for host code and enable support for CUDA
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
