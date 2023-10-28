@@ -77,14 +77,15 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
     for (auto val: found_unique_elements) {
         std::cout << val << " ";
     }
+    std::cout << std::endl;
 
     if (true_unique_values.size() != found_unique_elements.size()) {
         return false;
     }
 
-    return std::set<int>(true_unique_values.begin(), true_unique_values.end()) == 
-            std::set<int>(found_unique_elements.begin(), found_unique_elements.end());
-    // return true_unique_values == found_unique_elements;
+    //return std::set<int>(true_unique_values.begin(), true_unique_values.end()) == 
+    //        std::set<int>(found_unique_elements.begin(), found_unique_elements.end());
+    return true_unique_values == found_unique_elements;
 }
 
 int main() {
