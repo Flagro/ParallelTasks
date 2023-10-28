@@ -99,22 +99,6 @@ std::vector<int> UniqueFinder::find_unique() {
     int* d_binary;
     cudaMalloc(&d_binary, nunique * sizeof(int));
     histogram_to_binary<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, nunique);
-    // After generating the histogram
-    int* h_histogram_debug = new int[nunique];
-    cudaMemcpy(h_histogram_debug, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
-    for (int i = 0; i < nunique; i++) {
-        std::cout << "Hist[" << i << "]: " << h_histogram_debug[i] << std::endl;
-    }
-    delete[] h_histogram_debug;
-
-
-    // After converting to binary
-    int* h_binary_debug = new int[nunique];
-    cudaMemcpy(h_binary_debug, d_binary, nunique * sizeof(int), cudaMemcpyDeviceToHost);
-    for (int i = 0; i < nunique; i++) {
-        std::cout << "Binary[" << i << "]: " << h_binary_debug[i] << std::endl;
-    }
-    delete[] h_binary_debug;
 
     // Allocate memory for prefix_sum and unique_values on the device
     int* d_prefix_sum, *d_unique_values;
@@ -125,25 +109,17 @@ std::vector<int> UniqueFinder::find_unique() {
     int blockSize = min(nunique, BLOCK_SIZE);
     simple_prefix_sum<<<1, blockSize, blockSize * sizeof(int)>>>(d_binary, d_prefix_sum, nunique);
 
-    // After computing prefix sum
-    int* h_prefix_sum_debug = new int[nunique];
-    cudaMemcpy(h_prefix_sum_debug, d_prefix_sum, nunique * sizeof(int), cudaMemcpyDeviceToHost);
-    for (int i = 0; i < nunique; i++) {
-        std::cout << "PrefixSum[" << i << "]: " << h_prefix_sum_debug[i] << std::endl;
-    }
-    delete[] h_prefix_sum_debug;
-
     // Extract unique values based on the prefix sum
     extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_prefix_sum, d_unique_values, nunique);
 
-    // 1. Get the number of unique values
+    // Get the number of unique values
     int num_unique;
     cudaMemcpy(&num_unique, &d_prefix_sum[nunique - 1], sizeof(int), cudaMemcpyDeviceToHost);
 
-    // 2. Allocate space for these unique values on the host
+    // Allocate space for these unique values on the host
     std::vector<int> unique_elements(num_unique);
 
-    // 3. Copy the unique values from the device to the host memory
+    // Copy the unique values from the device to the host memory
     cudaMemcpy(unique_elements.data(), d_unique_values, num_unique * sizeof(int), cudaMemcpyDeviceToHost);
 
     // Clean up
