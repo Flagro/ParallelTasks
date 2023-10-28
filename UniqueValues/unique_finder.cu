@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-enum { THREADS_PER_BLOCK = 256 };
+enum { BLOCK_SIZE = 1024 };
 
 template <typename T>
 __global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
@@ -52,8 +52,8 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (unique_values_ + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    countOccurrences<<<blocksPerGrid, THREADS_PER_BLOCK>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
 
     cudaMemcpy(histogram_.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
 
