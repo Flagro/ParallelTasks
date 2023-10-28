@@ -62,11 +62,11 @@ __global__ void simple_prefix_sum(int* input, int* output, int n) {
     }
 }
 
-__global__ void extract_unique_values(int* histogram, int* prefixSum, int* unique_values, int nunique) {
+__global__ void extract_unique_values(int* histogram, int* prefixSum, int* data, int* unique_values, int nunique) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < nunique) {
         if (histogram[index] == 1) {
-            unique_values[prefixSum[index] - 1] = index;
+            unique_values[prefixSum[index] - 1] = data[index];
         }
     }
 }
@@ -118,7 +118,7 @@ std::vector<int> UniqueFinder::find_unique() {
     delete[] h_prefix_sum_debug;
 
     // Extract unique values based on the prefix sum
-    extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_binary, d_data, d_unique_values, nunique);
+    extract_unique_values<<<(nunique + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(d_histogram, d_prefix_sum, d_unique_values, nunique);
 
     // 1. Get the number of unique values
     int num_unique;
