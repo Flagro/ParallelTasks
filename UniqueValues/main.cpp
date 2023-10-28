@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <functional>
 #include <fstream>
-#include <set>
+#include <unordered_map>
 #include "unique_finder.cuh"
 
 enum Constants {
