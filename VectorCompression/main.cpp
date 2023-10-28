@@ -119,6 +119,7 @@ int main() {
         std::cout << "Median Compression Time: " << get_median(compression_times) << " ms" << std::endl;
         std::cout << "Median GetData Time: " << get_median(get_data_times) << " ms" << std::endl;
         std::cout << "Median GetSize Time: " << get_median(get_size_times) << " ms" << std::endl;
+        std::cout << "Original Size: " << N * sizeof(int) << " bytes" << std::endl;
         std::cout << "Min Size: " << *std::min_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
         std::cout << "Max Size: " << *std::max_element(sizes.begin(), sizes.end()) << " bytes" << std::endl;
         std::cout << "Mean Size: " << std::accumulate(sizes.begin(), sizes.end(), 0.0) / sizes.size() << " bytes" << std::endl;
