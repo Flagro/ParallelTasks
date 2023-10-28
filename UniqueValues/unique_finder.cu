@@ -66,8 +66,9 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::findUnique() {
-    ...
-    // After the histogram is computed:
+    int blocksPerGrid = (unique_values_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, unique_values_, unique_values_);
+
     int* d_count;
     cudaMalloc(&d_count, sizeof(int));
     cudaMemset(d_count, 0, sizeof(int));  // Initialize the count to 0
