@@ -54,7 +54,7 @@ std::vector<T> UniqueFinder<T>::find_unique() {
     cudaDeviceSynchronize();
 
     int* h_histogram = new int[nunique];
-    cudaError_t err = cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(h_histogram, d_histogram, nunique * sizeof(int), cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) {
         std::cerr << "Error during cudaMemcpy: " << cudaGetErrorString(err) << std::endl;
     }
