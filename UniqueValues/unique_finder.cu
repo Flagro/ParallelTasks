@@ -1,99 +1,81 @@
 #include "unique_finder.cuh"
 #include <cuda_runtime.h>
-#include <iostream>
 
-enum { BLOCK_SIZE = 32 };
+// Define block size
+const int BLOCK_SIZE = 256;
 
+// Kernel to compute the histogram
 template <typename T>
-__global__ void countOccurrences(T *data, T *unique_vals, T *histogram, int n, int unique_values_) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        printf("From kernel: First element = %d\n", data[0]);
-    }
-    T value = data[idx];
+__global__ void histogramKernel(const T* data, T* histogram, size_t dataSize, size_t nunique) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (idx >= n) return;  // Ensure we only process valid data indices
-
-    T value = data[idx];
-    for (int u = 0; u < unique_values_; u++) {
-        if (value == unique_vals[u]) {
-            atomicAdd(&histogram[u], 1);
-            break; // Break once we've found a match
+    // Check if the index is within the bounds
+    if (idx < dataSize) {
+        T value = data[idx];
+        for (int i = 0; i < nunique; ++i) {
+            if (value == i) {
+                atomicAdd(&histogram[i], 1);
+                break;
+            }
         }
     }
 }
 
-
+// Kernel to find unique values
 template <typename T>
-__global__ void extractUniqueValues(T *unique_vals, T *histogram, T *output, int *output_count, int unique_values_) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= unique_values_) return;
+__global__ void findUniqueKernel(const T* histogram, T* output, size_t nunique) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-    if (histogram[idx] == 1) {
-        int pos = atomicAdd(output_count, 1);
-        output[pos] = unique_vals[idx];
+    // Check if the index is within the bounds
+    if (idx < nunique) {
+        if (histogram[idx] == 1) {
+            output[idx] = idx;
+        } else {
+            output[idx] = -1;  // A flag to indicate non-unique value
+        }
     }
 }
 
 template <typename T>
-UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique): unique_values_(nunique), data_size_(data.size()) {
-    // Memory allocations and data copying
-    cudaMalloc(&d_data_, data.size() * sizeof(T));
-    cudaMalloc(&d_unique_values_, unique_values_ * sizeof(T));
-    cudaMalloc(&d_histogram_, unique_values_ * sizeof(T));
-    cudaMalloc(&d_output_count_, sizeof(int));
+UniqueFinder<T>::UniqueFinder(const std::vector<T>& data, size_t nunique) : nunique_(nunique), data_size_(data.size()) {
+    // Allocate device memory
+    cudaMalloc((void**)&d_data, data_size_ * sizeof(T));
+    cudaMalloc((void**)&d_histogram, nunique_ * sizeof(T));
 
-    histogram_.resize(unique_values_, 0);
-    std::vector<T> unique_values(unique_values_);
-    for (int i = 0; i < unique_values_; i++) {
-        unique_values[i] = static_cast<T>(i);
-    }
+    // Copy data to device
+    cudaMemcpy(d_data, data.data(), data_size_ * sizeof(T), cudaMemcpyHostToDevice);
 
-    cudaMemcpy(d_data_, data.data(), data.size() * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_unique_values_, unique_values.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_histogram_, histogram_.data(), unique_values_ * sizeof(T), cudaMemcpyHostToDevice);
+    // Initialize histogram to zeros
+    cudaMemset(d_histogram, 0, nunique_ * sizeof(T));
 }
 
 template <typename T>
 UniqueFinder<T>::~UniqueFinder() {
-    // Cleanup
-    cudaFree(d_data_);
-    cudaFree(d_unique_values_);
-    cudaFree(d_histogram_);
-    cudaFree(d_output_count_);
+    // Free device memory
+    cudaFree(d_data);
+    cudaFree(d_histogram);
 }
 
 template <typename T>
-std::vector<T> UniqueFinder<T>::findUnique() {
-    int blocksPerGrid = (data_size_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+std::vector<T> UniqueFinder<T>::find_unique() {
+    // Compute the histogram
+    int gridSize = (data_size_ + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    histogramKernel<<<gridSize, BLOCK_SIZE>>>(d_data, d_histogram, data_size_, nunique_);
 
-    countOccurrences<<<blocksPerGrid, BLOCK_SIZE>>>(d_data_, d_unique_values_, d_histogram_, data_size_, unique_values_);
+    // Find unique values
+    T* d_output;
+    cudaMalloc((void**)&d_output, nunique_ * sizeof(T));
+    findUniqueKernel<<<gridSize, BLOCK_SIZE>>>(d_histogram, d_output, nunique_);
 
-    // Debug: Check histogram
-    std::vector<T> debug_histogram(unique_values_);
-    cudaMemcpy(debug_histogram.data(), d_histogram_, unique_values_ * sizeof(T), cudaMemcpyDeviceToHost);
-    std::cout << "Histogram: ";
-    for (int i = 0; i < unique_values_; i++) {
-        std::cout << debug_histogram[i] << " ";
-    }
-    std::cout << std::endl;
+    // Copy the result back to host
+    std::vector<T> unique_values(nunique_);
+    cudaMemcpy(unique_values.data(), d_output, nunique_ * sizeof(T), cudaMemcpyDeviceToHost);
 
-    int h_output_count = 0;
-    cudaMemcpy(d_output_count_, &h_output_count, sizeof(int), cudaMemcpyHostToDevice);
-    
-    extractUniqueValues<<<blocksPerGrid, BLOCK_SIZE>>>(d_unique_values_, d_histogram_, d_data_, d_output_count_, unique_values_);
+    // Cleanup
+    cudaFree(d_output);
 
-    // Debug: Check unique values and count
-    cudaMemcpy(&h_output_count, d_output_count_, sizeof(int), cudaMemcpyDeviceToHost);
-    std::vector<T> debug_output(h_output_count);
-    cudaMemcpy(debug_output.data(), d_data_, h_output_count * sizeof(T), cudaMemcpyDeviceToHost);
-    std::cout << "Unique Values (" << h_output_count << "): ";
-    for (int i = 0; i < h_output_count; i++) {
-        std::cout << debug_output[i] << " ";
-    }
-    std::cout << std::endl;
+    // Filter out non-unique values
+    unique_values.erase(std::remove(unique_values.begin(), unique_values.end(), -1), unique_values.end());
 
-    return debug_output;
+    return unique_values;
 }
-

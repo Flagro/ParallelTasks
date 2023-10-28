@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cuda_runtime.h>
 
 template <typename T>
 class UniqueFinder {
@@ -9,15 +10,13 @@ public:
     UniqueFinder(const std::vector<T>& data, size_t nunique);
     ~UniqueFinder();
 
-    std::vector<T> findUnique();
+    std::vector<T> find_unique();
+
 private:
-    T* d_data_;
+    const T* d_data = nullptr;  // Pointer to device data
+    T* d_histogram = nullptr;   // Pointer to histogram on device
+    size_t nunique_;
     size_t data_size_;
-    T* d_unique_values_;
-    T* d_histogram_;
-    T* d_output_count_;
-    std::vector<T> histogram_;
-    size_t unique_values_;
 };
 
 // Explicit template instantiation for common types
