@@ -88,8 +88,8 @@ bool check_correctness(const std::vector<int>& original_data, const std::vector<
 }
 
 int main() {
-    std::ofstream json_file("results.json");
-    std::string json_results = "[\n";
+    //std::ofstream json_file("results.json");
+    //std::string json_results = "[\n";
 
     std::vector<double> allocation_times, get_unique_times, get_intimes;
     std::vector<int> sizes;
@@ -123,6 +123,7 @@ int main() {
             std::cout << "Incorrect result!" << std::endl;
         }
 
+        /*
         // JSON output
         std::vector<std::pair<std::string, std::string>> run_results;
         run_results.emplace_back("data_size", std::to_string(N));
@@ -132,6 +133,7 @@ int main() {
         run_results.emplace_back("correct", std::to_string(is_correct));
 
         json_results += toJsonString(run_results) + ",\n";
+        */
     }
 
     // Print the results to stdout
@@ -142,12 +144,13 @@ int main() {
     std::cout << "Correctness: " << correctness << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 
+    /*
     json_results.pop_back(); // Remove the last comma
     json_results.pop_back(); 
     json_results += "\n]";
 
     json_file << json_results;
     json_file.close();
-
+    */
     return 0;
 }
