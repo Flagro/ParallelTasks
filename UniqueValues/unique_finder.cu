@@ -42,7 +42,7 @@ UniqueFinder<T>::~UniqueFinder() {
 
 template <typename T>
 std::vector<T> UniqueFinder<T>::find_unique() {
-    err = count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size);
+    cudaError_t err = count_occurrences_kernel<<<(data_size + 255) / 256, 256>>>(d_data, d_histogram, data_size);
     if (err != cudaSuccess) {
         std::cerr << "Error during kernel execution: " << cudaGetErrorString(err) << std::endl;
     }
