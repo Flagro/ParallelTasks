@@ -10,7 +10,7 @@
 
 enum Constants {
     N = 10000000,       // Number of random integers
-    T = 100,          // Number of trials
+    T = 10,          // Number of trials
     UNIQUE_VALUES = 1000,  // limiting to 1000 unique values
 };
 
