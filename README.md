@@ -1,5 +1,5 @@
 # ParallelTasks
-This repository contains the implementation of tasks i got as homework for a job appliance for C++ developer with parallel CPU/GPU development tools stack.
+This repository contains implementations of tasks I received as homework for a job application as a C++ developer specializing in parallel CPU/GPU development.
 
 ## The tasks i was given
 ### Task1 - compression of integers with CPU
@@ -8,7 +8,7 @@ This repository contains the implementation of tasks i got as homework for a job
 - Implementation should be multithreaded and should be ran on CPU.
 
 ### Task2 - unique values with GPU
-- The task is to generate a sequence of 10 millions int32 integers with at maximum 1000 unique values and implement an algorithm for obtaining all the values that are only occur once in the sequence.
+- The task is to generate a sequence of 10 million int32 integers with at maximum 1000 unique values and implement an algorithm for obtaining all the values that are only occur once in the sequence.
 - The generation of a sequence should be on CPU and the algorithm for unique values should be on GPU.
 
 ## Comments on Task1:
@@ -19,7 +19,7 @@ This repository contains the implementation of tasks i got as homework for a job
 - The decompressed data is stored in RAM but the implementation allows it to be easily saved in binary files if needed.
 - I also included the generation of JSON files so it would be easy to analyze/interpret/debug the results with a python scripts.
 - The implementation uses stl containers instead of dynamic memory allocation with **new** but ensures that the capacity of the containers is restricted to take as little space in memory as possible.
-- The Huffman coding was promising for the second approach of data compression but it still had too much of an overhead for containing a tree so the criteria for the Huffman approach was decided to be more strict.
+- The Huffman coding was promising for the second approach of data compression but it still had too much of an overhead for containing a tree for the given input formats so the criteria for automated choosing of the Huffman algorithm was made more strict.
 
 ## Comments on Task2:
 - Since CUDA is the only GPU parallel programming kit i'm familiar with and i'm driving Apple Silicon chip the testing were done on Jupyter Notebook on free GPU resources in Kaggle.
@@ -35,4 +35,4 @@ As i spend just a bit over 2 days for these tasks there's still much that could 
 - Constants in main.cpp files could be passed as executable arguments.
 - Two Task1 implementations could be merged into one.
 - CMake could be merged for all the tasks by implementing different targets.
-- There's much could be improved structually, especially for the CUDA project which doesn't even use templates.
+- There's much could be improved structually, especially for the CUDA project which currently doesn't even use templates.
