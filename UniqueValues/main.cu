@@ -11,7 +11,7 @@
 
 enum Constants {
     N = 10000000,       // Number of random integers
-    T = 3,          // Number of trials
+    T = 5,          // Number of trials
     UNIQUE_VALUES = 1000,  // limiting to 1000 unique values
     OCCUR_ONCE_CNT = 100 // Number of values that occur only once
 };
