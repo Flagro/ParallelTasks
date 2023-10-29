@@ -23,12 +23,16 @@ This repository contains the implementation of tasks i got as homework for a job
 
 ## Comments on Task2:
 - Since CUDA is the only GPU parallel programming kit i'm familiar with and i'm driving Apple Silicon chip the testing were done on Jupyter Notebook on free GPU resources in Kaggle.
+- The main idea behind implementation is that there's not a lot of unique values, so each CUDA thread could iterate over it's chunk of data and atomically update the histogram for each element. This step was slightly optimized by the use of CUDA shared memory.
+- After the initialization of histogram we could straight away send this histogram from device to host and it would be fine because the size of a histogram is pretty small and would be parsed in an instant on CPU. But it wasn't clear from the task formulation if it's allowed or not so i implemented the process of obtaining the result array on a GPU as well.
 - The implementantion uses a cool trick called parallel prefix sum for a fast identification of indexes of unique integers in the output. Even though it's not the fastest implementation it still apllies a restriction on a UNIQUE_VALUES (it should be less than BLOCK_SIZE which is 1024) just for simplicity and demonstration of concept. It could be fixed with recursive calls.
-- 
+- If i spent more time on this task i would for sure tune the parameters (block sizes, chunk sizes, etc), implement safety features for the CUDA interactions (checking err value after each API call) and implement a safe destructor.
 
 ## Ways to improve:
+As i spend just a bit over 2 days for these tasks there's still much that could be improved:
 - The implementations obviously could use some documentation.
 - Currently the main.cpp files do have functions that could be moved to a new modules such as json generation module, aggregation functions, etc.
 - Constants in main.cpp files could be passed as executable arguments.
 - Two Task1 implementations could be merged into one.
-- CMake could be merged for all the tasks by implementing different targets
+- CMake could be merged for all the tasks by implementing different targets.
+- There's much could be improved structually, especially for the CUDA project which doesn't even use templates.
